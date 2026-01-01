@@ -3,6 +3,6 @@ import {testController} from "../controller/user";
 
 const route = express.Router();
 
-route.get("/testing", testController);
+route.get("/privacy", testController);
 
 export default route;

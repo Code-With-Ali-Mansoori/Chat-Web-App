@@ -1,0 +1,70 @@
+FACEBOOK OAUTH (LOCAL / DEV MODE) — STEP-BY-STEP
+
+1️⃣ Create Facebook Developer App
+Go to 👉 https://developers.facebook.com
+Click My Apps → Create App
+Select Consumer
+Enter:
+App Name (any real project name)
+Email
+Create App ✅
+
+2️⃣ Add Facebook Login Product
+Inside App Dashboard
+Click Add Product
+Choose Facebook Login
+Select WEB
+
+3️⃣ Facebook Login → Settings
+Turn these ON ✅
+Client OAuth Login → ON
+Web OAuth Login → ON
+📌 DO NOT add anything in:
+❌ Valid OAuth Redirect URIs (leave EMPTY in dev mode)
+Save Changes ✅
+
+4️⃣ App Settings → Basic
+Fill only these:
+App Domains → ❌ LEAVE EMPTY
+Privacy Policy URL →
+https://www.termsfeed.com/live/xxxxxx => (must be HTTPS, public)
+✔ Save Changes
+
+5️⃣ App Mode & Roles
+App Mode → Development
+Go to App Roles → Roles
+Add your Facebook account as Admin
+✅ Required for login in dev mode
+
+6️⃣ Get App Credentials
+From Settings → Basic, copy:
+App ID
+App Secret
+
+7️⃣ Backend Environment Variables
+Put these in .env (backend):
+FACEBOOK_CLIENT_ID=your_app_id
+FACEBOOK_CLIENT_SECRET=your_app_secret
+FACEBOOK_CALLBACK_URL=http://localhost:5000/auth/facebook/callback
+📌 Redirect URL is ONLY in backend, not Facebook UI (dev mode).
+
+8️⃣ Backend OAuth Setup (Example)
+Your backend must have:
+Route to start login:
+GET /auth/facebook
+Callback route: GET /auth/facebook/callback
+And Passport (or OAuth logic) must use:
+http://localhost:5000/auth/facebook/callback
+
+9️⃣ How to Test (Correct Way)
+Open browser and visit:
+http://localhost:5000/auth/facebook
+❌ Do NOT open callback URL directly.
+
+
+🧠 IMPORTANT NOTES (Read Once)
+localhost ❌ not allowed in App Domains
+Privacy Policy URL ❌ cannot be localhost
+Redirect URI field ❌ empty in dev mode
+Only Admin/Test users can login in dev mode
+HTTPS is required only in production
