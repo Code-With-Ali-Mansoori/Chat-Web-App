@@ -1,0 +1,11 @@
+step 1 - import required Lib and pakages 
+setp 2 - passport initailized as a Middleware
+step 3 - Create a Strategy to config the OAuth services
+    a => passport.use()
+    b => new Strategy() [ required two Argu ]
+    c => Arg-1 -- ClientID, ClientSecret, CallBack
+         Arg-2 -- Callback function to get the data
+
+step 4 - Import that config file into index.js like This => ( import './config/oauth' )
+step 5 - Routing 
+

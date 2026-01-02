@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Login | OAuth</title>
+
+    <!-- Optional: Font Awesome for icons -->
+    <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+    />
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f6f8;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .login-box {
+            background: #fff;
+            padding: 30px;
+            width: 350px;
+            border-radius: 10px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .login-box h1 {
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+
+        .oauth-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+            padding: 12px;
+            margin: 12px 0;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 16px;
+            font-weight: bold;
+            color: #fff;
+            transition: 0.3s;
+        }
+
+        .google {
+            background: #db4437;
+        }
+
+        .google:hover {
+            background: #c1351d;
+        }
+
+        .facebook {
+            background: #1877f2;
+        }
+
+        .facebook:hover {
+            background: #0f63c4;
+        }
+
+        .divider {
+            margin: 20px 0;
+            color: #aaa;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="login-box">
+        <h1>Login</h1>
+
+        <!-- Google OAuth -->
+        <a href="http://localhost:5000/oauth/auth/google" class="oauth-btn google">
+            <i class="fa-brands fa-google"></i>
+            Continue with Google
+        </a>
+
+        <!-- Facebook OAuth -->
+        <a href="http://localhost:5000/oauth/auth/facebook" class="oauth-btn facebook">
+            <i class="fa-brands fa-facebook-f"></i>
+            Continue with Facebook
+        </a>
+
+        <div class="divider">Secure OAuth Login 🔐</div>
+    </div>
+
+</body>
+</html>

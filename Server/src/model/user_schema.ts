@@ -1,15 +1,16 @@
 import mongoose, { Document } from "mongoose";
 
 interface User_Type extends Document {
-    username? : string,
     Public_user_id? : string, 
     user_avatar? : string, 
+    username? : string,
     email : string,
     user_gender? : 'Male' | 'Female',
     user_Bio? : string,
-    Provider : 'Google' | 'Facebook',
+    provider : 'Google' | 'Facebook',
+    provider_name : string,
     provider_Id : string,
-    isProfileComplete : Boolean
+    isProfileCompleted : Boolean
     Last_active? : Date
 };
 
@@ -20,8 +21,7 @@ const user_schema = new mongoose.Schema<User_Type>({
         unique : true
     },
     username : {
-        type : String,
-        unique: true,
+        type : String
     },
     Public_user_id : {
         type : String
@@ -37,7 +37,7 @@ const user_schema = new mongoose.Schema<User_Type>({
     user_Bio : {
        type : String
     },
-    Provider : {
+    provider : {
         type : String,
         required : true,
         enum : ['Google', 'Facebook']
@@ -46,7 +46,11 @@ const user_schema = new mongoose.Schema<User_Type>({
         type : String,
         required : true,
     },
-    isProfileComplete: {
+    provider_name : {
+        type : String,
+        required : true,
+    },
+    isProfileCompleted: {
         type: Boolean,
         default: false
     },
