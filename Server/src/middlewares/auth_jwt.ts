@@ -5,7 +5,6 @@ export interface AuthPayload {
   provider: string;
   provider_Id: string;
   email: string;
-//   userDB_id : string
 }
 
 export const authCheck = (req : Request, res : Response, next: NextFunction) => {
