@@ -1,35 +1,41 @@
 import express from "express";
 import passport from "passport";
-import { handleFBOAuth, handleGoogleOAuth } from "../controller/oauth";
+import { handleOAuth } from "../controller/oauth";
+import { authCheck } from "../middlewares/auth_jwt";
 
-const route = express.Router();
+const oauth_route = express.Router();
 
-route.get('/ejs', ( req : express.Request ,res : express.Response ) => {
+//Sample Page
+oauth_route.get('/ejs', ( req : express.Request ,res : express.Response ) => {
     return res.render('login')
 }); 
 
-// route.get('/auth/facebook/redirects', ( req : express.Request ,res : express.Response ) => {
-//     return res.json('hh')
-// }); 
+oauth_route.get('/profile', ( req : express.Request ,res : express.Response ) => {
+    return res.render('User_Info')
+}); 
+
+oauth_route.get('/home', authCheck ,( req : express.Request ,res : express.Response ) => {
+    return res.send('Home Page')
+}); 
 
 //Google
-route.get("/auth/google", 
+oauth_route.get("/auth/google", 
     passport.authenticate('google', { scope: ['profile', 'email'], session: false })
 );
 
-route.get("/redirects/google/user/chat_app", 
+oauth_route.get("/redirects/google/user/chat_app", 
     passport.authenticate('google', { failureRedirect: '/oauth/auth/google', session: false }),
-    handleGoogleOAuth
+    handleOAuth
 );
 
 //Facebook
-route.get("/auth/facebook", 
+oauth_route.get("/auth/facebook", 
     passport.authenticate('facebook', { scope: ['email'], session: false })
 );
 
-route.get("/facebook/redirects", 
+oauth_route.get("/facebook/redirects", 
     passport.authenticate('facebook', { failureRedirect: '/oauth/auth/facebook', session: false }),
-    handleFBOAuth
+    handleOAuth
 );
 
-export default route;
+export default oauth_route;

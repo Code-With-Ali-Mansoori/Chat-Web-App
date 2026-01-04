@@ -3,7 +3,7 @@ import mongoose, { Document } from "mongoose";
 interface User_Type extends Document {
     Public_user_id? : string, 
     user_avatar? : string, 
-    username? : string,
+    username? : string,     //update
     email : string,
     user_gender? : 'Male' | 'Female',
     user_Bio? : string,
@@ -61,4 +61,5 @@ const user_schema = new mongoose.Schema<User_Type>({
 {timestamps : true});
 
 const user_model = mongoose.model<User_Type>('User_Info',user_schema);
+
 export default user_model;
