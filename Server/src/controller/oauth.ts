@@ -22,7 +22,7 @@ export const handleOAuth = async (req : Request, res : Response) => {
       const payload = {
         provider: user.provider,
         provider_Id: user.provider_Id,
-        email : user.email 
+        email : user.email,
       };
 
       const JWT_Password = process.env.JWT_SECRET as string;
