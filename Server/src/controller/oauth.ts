@@ -46,13 +46,14 @@ export const handleOAuth = async (req : Request, res : Response) => {
         username : randomUsername
       });
 
-      res.redirect('/oauth/home');  //redirect to Profile-Setup page
+      res.redirect('http://localhost:5000/welcome');  //redirect to Profile-Setup page
       
       // return res.status(201).json({message : 'User Created Succesfully!'});
       return
     };
 
-    return res.status(200).json({message : 'Welcome page'});  //redirect to Home page
+    res.redirect('http://localhost:5000/welcome');
+    // return res.status(200).json({message : 'Welcome page'});  //redirect to Home page
 
     } catch (error) {
       res.status(500).json({message : error});

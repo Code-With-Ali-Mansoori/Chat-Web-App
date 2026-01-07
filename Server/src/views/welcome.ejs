@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Welcome 🎉</title>
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: "Segoe UI", sans-serif;
+    }
+
+    body {
+      height: 100vh;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .card {
+      background: #ffffff;
+      width: 400px;
+      padding: 30px;
+      border-radius: 14px;
+      text-align: center;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+    }
+
+    .avatar {
+      width: 110px;
+      height: 110px;
+      border-radius: 50%;
+      background: #e5e7eb;
+      margin: 0 auto 15px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 42px;
+    }
+
+    h1 {
+      margin-bottom: 10px;
+      color: #111827;
+    }
+
+    p {
+      color: #4b5563;
+      margin-bottom: 20px;
+    }
+
+    .status {
+      background: #e6fffa;
+      color: #065f46;
+      padding: 10px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      font-size: 14px;
+    }
+
+    .actions {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .btn {
+      padding: 10px;
+      border-radius: 8px;
+      text-decoration: none;
+      color: #fff;
+      font-weight: 600;
+    }
+
+    .btn.primary {
+      background: #667eea;
+    }
+
+    .btn.secondary {
+      background: #10b981;
+    }
+
+    .btn.danger {
+      background: #ef4444;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="card">
+    <div class="avatar">🎉</div>
+    <h1>Welcome!</h1>
+    <p>Your account has been successfully created.</p>
+    <div class="status">
+      ✅ Profile setup completed successfully
+    </div>
+    <div class="actions">
+      <a href="http://localhost:5000/chat" class="btn primary">Go to Chats 💬</a>
+      <!-- <a href="/profile" class="btn secondary">View Profile 👤</a> -->
+      <a href="#" class="btn danger">Logout </a>
+    </div>
+  </div>
+</body>
+
+<script src="/socket.io/socket.io.js"></script>
+
+<script>
+  const socket = io("http://localhost:5000");
+  // socket.emit('connection')
+</script>
+
+</html>

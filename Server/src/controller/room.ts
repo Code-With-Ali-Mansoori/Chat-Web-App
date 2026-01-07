@@ -113,3 +113,28 @@ try {
     });       
 }
 }
+
+export const specific_user = async (req : Request, res : Response) => {
+    try {
+
+        const user_id = req.body.id;
+
+        if (!user_id) {
+            return res.status(404).json({message : "User ID is required!"});
+        };
+
+        const user = await user_model.findById(user_id);
+
+        if (!user) {
+            return res.status(404).json({message : "User not found in DB!"});
+        };
+
+        res.status(200).json({"user_id" : user});
+        return
+        
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({message : "Error in Search Api", error});
+
+    }
+}

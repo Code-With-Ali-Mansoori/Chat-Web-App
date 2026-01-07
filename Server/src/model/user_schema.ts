@@ -11,7 +11,8 @@ interface User_Type extends Document {
     provider_name : string,
     provider_Id : string,
     isProfileCompleted : Boolean
-    Last_active? : Date
+    Last_active? : Date,
+    Active_Status : Boolean
 };
 
 const user_schema = new mongoose.Schema<User_Type>({
@@ -51,6 +52,10 @@ const user_schema = new mongoose.Schema<User_Type>({
         required : true,
     },
     isProfileCompleted: {
+        type: Boolean,
+        default: false
+    },
+    Active_Status: {
         type: Boolean,
         default: false
     },

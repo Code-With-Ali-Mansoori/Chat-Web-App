@@ -44,6 +44,7 @@ try {
 
 }};
 
+
 export const welcome_user = async ( req: Request, res: Response ) => {
     try {
 
@@ -59,7 +60,8 @@ export const welcome_user = async ( req: Request, res: Response ) => {
             avatar : Db_user.user_avatar,
             Bio : Db_user.user_Bio,
             gender : Db_user.user_gender,
-            public_Id: Db_user.Public_user_id
+            public_Id: Db_user.Public_user_id,
+            user_id : Db_user._id
         };
 
         return res.status(200).json({message : {
@@ -113,3 +115,4 @@ try {
     return res.status(500).json({message : "Error in Search Api", error});
 
 }};
+

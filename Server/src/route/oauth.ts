@@ -2,6 +2,7 @@ import express from "express";
 import passport from "passport";
 import { handleOAuth } from "../controller/oauth";
 import { authCheck } from "../middlewares/auth_jwt";
+// import { chat_sockets, welcome_sockets } from "../config/socket.handler";
 
 const oauth_route = express.Router();
 
@@ -10,13 +11,14 @@ oauth_route.get('/ejs', ( req : express.Request ,res : express.Response ) => {
     return res.render('login')
 }); 
 
-oauth_route.get('/profile', ( req : express.Request ,res : express.Response ) => {
+oauth_route.get('/profile',( req : express.Request ,res : express.Response ) => {
     return res.render('User_Info')
 }); 
 
-oauth_route.get('/home', authCheck ,( req : express.Request ,res : express.Response ) => {
-    return res.send('Home Page')
-}); 
+// Testing Sockets
+// oauth_route.get('/welcome', authCheck , welcome_sockets); 
+// oauth_route.get('/chat', authCheck , chat_sockets); 
+
 
 //Google
 oauth_route.get("/auth/google", 
