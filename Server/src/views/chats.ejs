@@ -27,17 +27,38 @@
       border-radius: 14px;
       display: flex;
       flex-direction: column;
-      box-shadow: 0 20px 40px rgba(0,0,0,0.6);
       overflow: hidden;
     }
 
-    /* Header */
+    /* HEADER */
     .chat-header {
-      background: #020617;
-      padding: 15px;
       display: flex;
       align-items: center;
+      padding: 12px;
+      gap: 10px;
+      background: #020617;
       border-bottom: 1px solid #1e293b;
+    }
+
+    /* 🔙 BACK BUTTON (VISIBLE AF) */
+    .back-btn {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      border: none;
+      background: #6366f1;   /* 👈 bright */
+      color: #fff;
+      font-size: 22px;
+      font-weight: bold;
+      cursor: pointer;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .back-btn:hover {
+      background: #4f46e5;
     }
 
     .avatar {
@@ -50,7 +71,6 @@
       justify-content: center;
       color: #fff;
       font-weight: bold;
-      margin-right: 10px;
     }
 
     .user-info h3 {
@@ -63,7 +83,7 @@
       color: #22c55e;
     }
 
-    /* Messages */
+    /* MESSAGES */
     .chat-body {
       flex: 1;
       padding: 15px;
@@ -78,21 +98,18 @@
       padding: 10px 14px;
       border-radius: 12px;
       font-size: 14px;
-      line-height: 1.4;
     }
 
     .incoming {
       background: #1e293b;
       color: #e5e7eb;
       align-self: flex-start;
-      border-bottom-left-radius: 0;
     }
 
     .outgoing {
       background: #6366f1;
       color: #fff;
       align-self: flex-end;
-      border-bottom-right-radius: 0;
     }
 
     .time {
@@ -101,12 +118,11 @@
       margin-top: 4px;
     }
 
-    /* Input */
+    /* INPUT */
     .chat-footer {
       display: flex;
       padding: 12px;
       border-top: 1px solid #1e293b;
-      background: #020617;
     }
 
     .chat-footer input {
@@ -114,9 +130,9 @@
       padding: 10px;
       border-radius: 8px;
       border: none;
-      outline: none;
       background: #1e293b;
       color: #fff;
+      outline: none;
     }
 
     .chat-footer button {
@@ -127,41 +143,7 @@
       background: #6366f1;
       color: #fff;
       cursor: pointer;
-      font-weight: 600;
     }
-
-    .chat-footer button:hover {
-      background: #4f46e5;
-    }
-    .typing {
-  display: hidden;
-  gap: 6px;
-  padding: 8px 12px;
-  width: fit-content;
-  background: #e5e5ea;
-  border-radius: 12px;
-  margin: 18px;
-
-}
-
-.typing span {
-  width: 6px;
-  height: 6px;
-  background: #555;
-  border-radius: 50%;
-  animation: blink 1.4s infinite both;
-}
-
-.typing span:nth-child(1) { animation-delay: 0s; }
-.typing span:nth-child(2) { animation-delay: .2s; }
-.typing span:nth-child(3) { animation-delay: .4s; }
-
-@keyframes blink {
-  0% { opacity: .2; }
-  20% { opacity: 1; }
-  100% { opacity: .2; }
-}
-
   </style>
 </head>
 
@@ -169,17 +151,20 @@
 
   <div class="chat-container">
 
-    <!-- Header -->
+    <!-- HEADER -->
     <div class="chat-header">
+      <div class="back-btn" onclick="handleBack()">←</div>
+
       <div class="avatar">U</div>
+
       <div class="user-info">
         <h3>Other User</h3>
         <span>Online</span>
       </div>
     </div>
 
-    <!-- Messages -->
-    <div class="chat-body" id="chatBody">
+    <!-- BODY -->
+    <div class="chat-body">
       <div class="message incoming">
         Hey 👋
         <div class="time">10:01 AM</div>
@@ -191,29 +176,30 @@
       </div>
     </div>
 
-      <div class="typing">
-        <span></span>
-        <span></span>
-        <span></span>
-      </div>
-
-    <!-- Input -->
-    <form class="chat-footer" id="chatForm">
-
-      <input 
-        type="text"
-        id="messageInput"
-        placeholder="Type a message..."
-        autocomplete="off"
-        oninput="handleTyping()"
-      />
-      <button type="submit">Send</button>
+    <!-- INPUT -->
+    <form class="chat-footer">
+      <input type="text" placeholder="Type a message..." />
+      <button>Send</button>
     </form>
 
   </div>
-
-  <!-- Socket.IO -->
-
-
 </body>
+
+  <script src="/socket.io/socket.io.js"></script>        
+  <script>
+    const socket = io();
+
+    const handleBack = () => {
+      socket.emit('leave-room', room_id = '695e9b2a6729b6e66b60f52a');
+      window.location.href = "http://localhost:5000/welcome";
+    };
+
+    socket.on('connect', () => {
+      console.log("✅ socket connected:", socket.id);
+
+      socket.emit('join-room', room_id = '695e9b2a6729b6e66b60f52a');
+
+    });
+  </script>
+
 </html>

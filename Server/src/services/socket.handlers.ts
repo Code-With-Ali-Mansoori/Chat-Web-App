@@ -27,19 +27,25 @@ try {
         return socket.disconnect();        
     };
 
-    const user = await user_model.findOne({ email: decoded.email });
-    if (!user) return socket.disconnect();
+    const userDB = await user_model.findOne({ email: decoded.email });
+    if (!userDB) return socket.disconnect();
 
-    await user_model.findByIdAndUpdate(user._id, 
-    { Active_Status: true });
+    await user_model.findByIdAndUpdate(userDB._id, { Active_Status: true });
     
     // USER IDENTIFIED
     const socket_user = {
-      id: user._id.toString(),  
-      name: user.provider_name
+      userId: userDB._id.toString(),  
+      username: userDB.provider_name
     };
 
-    console.log("Socket connected:", socket_user.name,' => ',socket.id);
+    socket.data as any;
+    socket.data.user = socket_user;
+
+    // socket.data.userId = userDB._id;
+    // socket.data.username = userDB.username;
+
+    // console.log("Socket connected:", socket.id);
+    // console.log(socket.data);  
 
 } catch (error) {
     socket.disconnect();
@@ -49,37 +55,37 @@ try {
 
 export const disconnect_socket = async (socket : Socket) => {
 try {
-  
-        const cookieHeader = socket.handshake.headers.cookie;
+    // const cookieHeader = socket.handshake.headers.cookie;
     
-        if (!cookieHeader) {
-            console.log("No cookies found");
-            throw new Error("No cookies found")
-        };
+        // if (!cookieHeader) {
+        //     console.log("No cookies found");
+        //     throw new Error("No cookies found")
+        // };
 
-        const cookies = Object.fromEntries(
-            cookieHeader.split("; ").map(c => c.split("="))
-        );
+        // const cookies = Object.fromEntries(
+        //     cookieHeader.split("; ").map(c => c.split("="))
+        // );
 
-        const token = cookies.token; 
-        if (!token){ throw new Error("No Token found")};
+        // const token = cookies.token; 
+        // if (!token){ throw new Error("No Token found")};
         
-        const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as AuthPayload
+        // const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as AuthPayload
                 
-        if ( !decoded ) {
-            console.log("No Token found");
-            throw new Error("No user data found")       
-        };
+        // if ( !decoded ) {
+        //     console.log("No Token found");
+        //     throw new Error("No user data found")       
+        // };
         
-        const user = await user_model.findOne({ email: decoded.email });
-        if (!user) {throw new Error("No user found")}
+        // const user = await user_model.findOne({ email: decoded.email });
+        // if (!user) {throw new Error("No user found")};
+
+    const userId = socket.data.user.userId;
+    await user_model.findByIdAndUpdate({_id : userId}, { Active_Status: false });
         
-        await user_model.findByIdAndUpdate(user._id, { Active_Status: false });
-        console.log("Socket disconnected:", socket.id);
+    // console.log("Socket disconnected:", socket.id);
 
 } catch (error) {
     console.log(error);
     throw new Error("Erorr in Disconnect Handler");
 
 }};
-

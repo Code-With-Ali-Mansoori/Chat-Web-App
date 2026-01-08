@@ -5,5 +5,5 @@ export const welcome_sockets = ( req : express.Request , res : express.Response 
 };
 
 export const chat_sockets = ( req : express.Request ,res : express.Response ) => {
-    res.render('chat')
+    res.render('chats')
 };

@@ -22,4 +22,4 @@ app_route.get('/rooms/users', authCheck, specific_user); //used in each chat roo
 
 //Testing Sockets
 app_route.get('/welcome', authCheck , welcome_sockets); 
-app_route.get('/chat', authCheck , chat_sockets); 
+app_route.get('/chats', authCheck , chat_sockets); 
