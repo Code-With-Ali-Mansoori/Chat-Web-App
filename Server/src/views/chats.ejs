@@ -144,6 +144,18 @@
       color: #fff;
       cursor: pointer;
     }
+
+    .type-text {
+      text-align: left;
+      padding: 8px;
+      color: rgb(205, 205, 205);
+      background-color: #1e293b;
+      border-radius: 8px;
+      font-size: small;
+      margin-block: 4px;
+      display: none;
+    }
+
   </style>
 </head>
 
@@ -165,21 +177,27 @@
 
     <!-- BODY -->
     <div class="chat-body">
+
       <div class="message incoming">
-        Hey 👋
+          msg
         <div class="time">10:01 AM</div>
-      </div>
+      </div>      
 
       <div class="message outgoing">
         Hello! How are you?
         <div class="time">10:02 AM</div>
       </div>
+
+      <div class="type-indicator">
+        <span class="type-text">Typing...</span>
+      </div>
+    
     </div>
 
     <!-- INPUT -->
-    <form class="chat-footer">
-      <input type="text" placeholder="Type a message..." />
-      <button>Send</button>
+    <form onsubmit="handleSocketMsg(event)" class="chat-footer">
+      <input oninput="handleInputMsg()" id="msg-Input" type="text" placeholder="Type a message..." />
+      <button type="submit">Send</button>
     </form>
 
   </div>
@@ -187,19 +205,82 @@
 
   <script src="/socket.io/socket.io.js"></script>        
   <script>
+
     const socket = io();
-
-    const handleBack = () => {
-      socket.emit('leave-room', room_id = '695e9b2a6729b6e66b60f52a');
-      window.location.href = "http://localhost:5000/welcome";
-    };
-
+    let user_TypesMsg;
+    let All_msgs = [];
+    
     socket.on('connect', () => {
       console.log("✅ socket connected:", socket.id);
 
-      socket.emit('join-room', room_id = '695e9b2a6729b6e66b60f52a');
+      //Setting Manually for Testign logic
+      socket.emit('join-room', room_id = '695e9b2a6729b6e66b60f52a');   
+
+      socket.on('msg_seen', (UserName) => {
+        console.log(`Msg Seen by this user => ${UserName}`);
+      });
+
+      socket.on('users-typing', () => {
+        const textIndicator = document.querySelector('.type-text');
+        if (!textIndicator) return;
+        
+        textIndicator.style.display="inline";
+      });
+
+      socket.on('stop-typinggggg', () => {
+        const textIndicator = document.querySelector('.type-text');
+        if (!textIndicator) return;
+        
+        textIndicator.style.display="none";
+      });
+
+      socket.on('receive-msg', (msg) => {
+          console.log(msg);
+
+        //Frontend pe me apne user_data ko sender_Id se match karaunga, 
+        // agar wo same hoga to msg ko [ Right side ] me align kardunga, 
+        // nahi to samjhunga wo samne wale ka msg h to [ left side ] me align kar dunga!
+      })
 
     });
+
+    const handleBack = () => {
+      //Setting Manually for Testign logic
+      socket.emit('leave-room', room_id = '695e9b2a6729b6e66b60f52a');  
+      window.location.href = "http://localhost:5000/welcome";
+    };
+
+    const handleInputMsg = () => {     
+        let typingTimeout;
+
+        //Setting Manually for Testign logic
+        socket.emit('typing', room_id = '695e9b2a6729b6e66b60f52a');
+        clearTimeout(typingTimeout);
+
+        //Setting Manually for Testign logic
+        typingTimeout = setTimeout(() => {
+          socket.emit('stop-typing' , room_id = '695e9b2a6729b6e66b60f52a');
+
+        },1000);
+    };
+
+    const handleSocketMsg = (e) => {
+      e.preventDefault();
+
+      const inputFeild = document.querySelector('#msg-Input');
+      const inputMsg = inputFeild.value;
+
+      //Setting Manually for Testign logic
+      socket.emit('send-message', {
+        msg : inputMsg,
+        msg_type : 'text',
+        sender_id : "695de922c4f2d3af9ea623cf",   //Get from the Client through API
+        room_id : '695e9b2a6729b6e66b60f52a'    //Get from the Client through API
+      }); 
+
+      inputFeild.value= "";
+    };
+
   </script>
 
 </html>

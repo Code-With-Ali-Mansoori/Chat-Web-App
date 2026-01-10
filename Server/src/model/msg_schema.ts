@@ -1,14 +1,16 @@
-import mongoose, { Document, Schema } from 'mongoose';
+import mongoose, { Document, Schema, Types } from 'mongoose';
 
 export interface Msg_types extends Document {
-    room_id: Schema.Types.ObjectId,
-    sender_id: Schema.Types.ObjectId,
+    room_id: Types.ObjectId,
+    sender_id: Types.ObjectId,
     msg_content : string,
+    msg_iv: String,
+    msg_tag: String
     msg_type : "text" | "image" | "video" | "file",
-    msg_seenBy? :  Schema.Types.ObjectId | null
+    msg_seenBy? : Types.ObjectId | null
 };
 
-const msg_schema = new mongoose.Schema({
+const msg_schema = new mongoose.Schema<Msg_types>({
     room_id : {
         required : true,
         type : Schema.Types.ObjectId,
@@ -21,6 +23,14 @@ const msg_schema = new mongoose.Schema({
         ref: "user_model",
     },
     msg_content : {
+        required : true,
+        type : String
+    },
+    msg_iv : {
+        required : true,
+        type : String
+    },
+    msg_tag : {
         required : true,
         type : String
     },
