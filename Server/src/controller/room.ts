@@ -177,3 +177,16 @@ export const get_Old_Msgs = async (req : Request, res : Response) => {
          
     };
 };
+
+export const handleMedia_msgs = async (req : Request, res : Response) => {
+try {
+    const file = req.file; 
+    console.log(file);
+    
+    return res.status(200).json({message : file});
+    
+} catch (error) {
+    console.log(error);
+    return res.status(500).json({message : 'Erorr in Media_Msg Controller'});
+    
+}};

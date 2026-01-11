@@ -12,6 +12,7 @@ import { app_route } from "./route/app_route";
 import http from 'node:http';
 import {Server} from 'socket.io';
 import './utils/secure_msg';
+import'./config/cloudinary.config';
 
 const app = express();
 const node_server = http.createServer(app);
