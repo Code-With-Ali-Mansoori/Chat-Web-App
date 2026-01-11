@@ -65,37 +65,6 @@ try {
 
 }};
 
-export const handle_reciver_msg = async (room_id : any) => {
-try {
-
-    const all_msg_data = await message_model.find({room_id :room_id});
-
-    if (all_msg_data.length === 0) return console.log('Dtaa not found in room');
-
-    return all_msg_data.map((msg) => {
-
-        const msgs = Decrypt_msg({
-            msg_content: msg.msg_content.toString(),
-            msg_iv: msg.msg_iv.toString(),
-            msg_tag: msg.msg_tag.toString()
-        });
-
-        return {
-            msg_id: msg._id,
-            msg: msgs,
-            msg_type : msg.msg_type,
-            msg_sender: msg.sender_id,
-            msg_seenBy : msg.msg_seenBy
-        };
-    });
-
-    
-} catch (error) {
-    console.log(error);
-    console.log('Erorr in reciver msg function of Sockets!');
-     
-}};
-
 export const handleSeen = async (socket : Socket, room_id : any) => {
     
     const usersId = socket.data.user.userId;
@@ -113,3 +82,34 @@ export const handleSeen = async (socket : Socket, room_id : any) => {
     }});
 
 };
+
+// export const handle_reciver_msg = async (room_id : any) => {
+// try {
+
+//     const all_msg_data = await message_model.find({room_id :room_id});
+
+//     if (all_msg_data.length === 0) return console.log('Dtaa not found in room');
+
+//     return all_msg_data.map((msg) => {
+
+//         const msgs = Decrypt_msg({
+//             msg_content: msg.msg_content.toString(),
+//             msg_iv: msg.msg_iv.toString(),
+//             msg_tag: msg.msg_tag.toString()
+//         });
+
+//         return {
+//             msg_id: msg._id,
+//             msg: msgs,
+//             msg_type : msg.msg_type,
+//             msg_sender: msg.sender_id,
+//             msg_seenBy : msg.msg_seenBy
+//         };
+//     });
+
+    
+// } catch (error) {
+//     console.log(error);
+//     console.log('Erorr in reciver msg function of Sockets!');
+     
+// }};

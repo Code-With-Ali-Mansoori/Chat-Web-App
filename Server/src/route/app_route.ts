@@ -4,7 +4,7 @@ import { authCheck } from "../middlewares/auth_jwt";
 import { logout_user } from "../controller/user_handler";
 import { welcome_user } from "../controller/user_handler";
 import { search_user_handler } from "../controller/user_handler";
-import { create_room_handler, search_my_rooms , specific_user} from "../controller/room";
+import { create_room_handler, get_Old_Msgs, search_my_rooms , specific_user} from "../controller/room";
 import { chat_sockets, welcome_sockets } from "../controller/ejs";
 
 export const app_route = express.Router();
@@ -19,7 +19,8 @@ app_route.get("/users/search", authCheck , search_user_handler); //to search oth
 app_route.post("/create/room", authCheck, create_room_handler);    // Creating Room
 app_route.get("/my/rooms", authCheck, search_my_rooms);    // Searching All Rooms
 app_route.get('/rooms/users', authCheck, specific_user); //used in each chat room users 
+app_route.get('/room/all_messages/:roomId', get_Old_Msgs);  //get all old message 
 
 //Testing Sockets
 app_route.get('/welcome', authCheck , welcome_sockets); 
-app_route.get('/chats', authCheck , chat_sockets); 
+app_route.get('/chats', authCheck , chat_sockets);

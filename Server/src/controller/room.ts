@@ -2,6 +2,8 @@ import { Request, Response } from "express";
 import { AuthPayload } from "../middlewares/auth_jwt";
 import user_model from "../model/user_schema";
 import room_model from "../model/chat_room_schema";
+import message_model from "../model/msg_schema";
+import { Decrypt_msg } from "../utils/secure_msg";
 
 export const create_room_handler = async (req: Request, res: Response ) => {
 try {
@@ -137,4 +139,41 @@ export const specific_user = async (req : Request, res : Response) => {
         return res.status(500).json({message : "Error in Search Api", error});
 
     }
-}
+};
+
+export const get_Old_Msgs = async (req : Request, res : Response) => {
+    try {
+    
+        const roomid = req.params.roomId;
+        const all_msg_data = await message_model.find({room_id :roomid});
+    
+        if (all_msg_data.length === 0) {
+            return res.status(200).json({message : 'No data found in a chat!'})
+        };
+    
+        const allData = all_msg_data.map((msg) => {
+    
+            const msgs = Decrypt_msg({
+                msg_content: msg.msg_content.toString(),
+                msg_iv: msg.msg_iv.toString(),
+                msg_tag: msg.msg_tag.toString()
+            });
+    
+            return {
+                msg_id: msg._id,
+                msg: msgs,
+                msg_type : msg.msg_type,
+                msg_sender: msg.sender_id,
+                msg_seenBy : msg.msg_seenBy
+            };
+        });
+    
+        res.status(200).json({message : allData});
+        return;
+        
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({message : error})
+         
+    };
+};

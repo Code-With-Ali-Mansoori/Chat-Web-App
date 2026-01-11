@@ -234,8 +234,8 @@
         textIndicator.style.display="none";
       });
 
-      socket.on('receive-msg', (msg) => {
-          console.log(msg);
+      socket.on('receive-msg', (msg, msg_type, sender_id, room_id) => {
+          console.log(msg, msg_type, sender_id );
 
         //Frontend pe me apne user_data ko sender_Id se match karaunga, 
         // agar wo same hoga to msg ko [ Right side ] me align kardunga, 
