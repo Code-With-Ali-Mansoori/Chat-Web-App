@@ -176,7 +176,8 @@ export const get_Old_Msgs = async (req : Request, res : Response) => {
                 msg: msgs,
                 msg_type : msg.msg_type,
                 msg_sender: msg.sender_id,
-                msg_seenBy : msg.msg_seenBy
+                msg_seenBy : msg.msg_seenBy,
+                sentAt : msg?.createdAt!
             };
 
             } else {
@@ -186,9 +187,10 @@ export const get_Old_Msgs = async (req : Request, res : Response) => {
                     msg_type : msg.msg_type,
                     msg_sender: msg.sender_id,
                     msg_seenBy : msg.msg_seenBy,
-                    mediaURL : msg?.media?.media_url!
+                    mediaURL : msg?.media?.media_url!,
+                    sentAt : msg?.createdAt!
                 };
-            } 
+            };
         });
     
         res.status(200).json({message : allData});

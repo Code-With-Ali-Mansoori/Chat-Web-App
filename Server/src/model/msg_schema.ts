@@ -12,6 +12,8 @@ export interface Msg_types extends Document {
     msg_iv? : string;
     msg_tag? : string;
     msg_seenBy? : Types.ObjectId | null;
+    createdAt: Date;
+    updatedAt: Date;
 };
 
 const msg_schema = new mongoose.Schema<Msg_types>({

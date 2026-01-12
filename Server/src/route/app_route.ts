@@ -23,8 +23,8 @@ app_route.get("/users/search", authCheck , search_user_handler); //to search oth
 app_route.post("/create/room", authCheck, create_room_handler);    // Creating Room
 app_route.get("/my/rooms", authCheck, search_my_rooms);    // Searching All Rooms
 app_route.get('/rooms/users', authCheck, specific_user); //used in each chat room users 
-app_route.get('/room/all_messages/:roomId', get_Old_Msgs);  //get all old message 
-app_route.post("/room/msgs/media", upload.single('file'), handleMedia_msgs);
+app_route.get('/room/all_messages/:roomId', authCheck,  get_Old_Msgs);  //get all old message 
+app_route.post("/room/msgs/media", authCheck, upload.single('file'), handleMedia_msgs);
 
 //Testing Sockets
 app_route.get('/welcome', authCheck , welcome_sockets); 
