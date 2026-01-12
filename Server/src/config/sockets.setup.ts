@@ -40,7 +40,15 @@ io.on("connection", (socket) => {
         // const msgs = await handle_reciver_msg( room_id );
         io.to(room_id).emit('receive-msg', msg, msg_type, sender_id );  //io => socket
         
-    })
+    });
+
+    //7. 
+    socket.on('media-send', (roomId, sender_id, file) => {
+
+        io.to(roomId).emit('receive-media', sender_id, file);
+        // console.log(roomId, sender_id, file);
+        
+    });
          
     //8. Disconnect Socket
     socket.on("disconnect", () => disconnect_socket(socket));

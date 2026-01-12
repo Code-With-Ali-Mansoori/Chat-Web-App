@@ -197,7 +197,13 @@
     <!-- INPUT -->
     <form onsubmit="handleSocketMsg(event)" class="chat-footer">
       <input oninput="handleInputMsg()" id="msg-Input" type="text" placeholder="Type a message..." />
-      <button type="reset" style="color: white; padding-inline: 6px; padding-top: 7px; text-align: center;">Media</button>
+
+      <input type="file" id="mediaInput" enctype="multipart/form-data" hidden />
+
+      <div onclick="hanldeMediaUploads()" style="color: white; padding-inline: 6px;  padding-top: 7px; text-align: center; background-color: gray; margin-left: 8px; border-radius: 8px;">
+        📸
+      </div>
+
       <button type="submit">Send</button>
     </form>
 
@@ -243,6 +249,10 @@
         // nahi to samjhunga wo samne wale ka msg h to [ left side ] me align kar dunga!
       })
 
+      socket.on('receive-media', (sender_id, file) => {
+          console.log(sender_id, file);
+          
+      })
     });
 
     const handleBack = () => {
@@ -280,6 +290,38 @@
       }); 
 
       inputFeild.value= "";
+    };
+
+    const hanldeMediaUploads = () => {
+      const mediaInput = document.querySelector("#mediaInput");
+      mediaInput.click();
+
+      mediaInput.addEventListener('change', async () => {
+        const uplodedfile = mediaInput.files[0];
+
+        if (!uplodedfile) return;
+
+        const formData = new FormData();
+        formData.append("file", uplodedfile);
+        formData.append("senderId", "695de922c4f2d3af9ea623cf");
+        formData.append("roomId", "695e9b2a6729b6e66b60f52a");
+        
+        const res = await fetch("http://localhost:5000/room/msgs/media", {
+          method: "POST",
+          body : formData
+        });
+
+        const result = await res.json();
+        
+        socket.emit('media-send', 
+          roomId = result.data.roomId, 
+          file = result.data.mediaURL, 
+          sender_id = result.data.senderId 
+        );
+
+        return;
+      });
+
     };
 
   </script>
