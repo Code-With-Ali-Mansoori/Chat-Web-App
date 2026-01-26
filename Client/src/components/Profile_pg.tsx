@@ -1,10 +1,14 @@
 import { Copy, Mars, MoveLeft } from "lucide-react"
+import { useNavigate } from "react-router-dom";
 
 const Profile_pg = () => {
+
+  const navigator =  useNavigate();
+
   return (
     <div className=" md:p-2 w-full h-full">
         <div className="flex border-b border--300 pl-4 mb-4 py-2 justify-start gap-3 md:gap-4 items-center">
-            <div className="mt-1">
+            <div onClick={() => {navigator('/welcome-page')}} className="mt-1">
                 <MoveLeft size={24} strokeWidth={1.70} />
             </div>
             <h1 className="md:text-2xl md:font-">User Profile</h1>
@@ -47,8 +51,8 @@ const Profile_pg = () => {
             </div>
         </div>
 
-        <div className="mb:pl-10 flex justify-center items-center md:block md:ml-5">
-            <button className="bg-gray-800 border font-medium text-white border-gray-200 rounded-2xl px-20 py-3">Let us Chat</button>
+        <div onClick={() => {navigator('/chat/room')}} className="mb:pl-10 flex justify-center items-center md:block md:ml-5">
+            <button className="bg-gray-800 hover:cursor-pointer  hover:bg-gray-700  border font-medium text-white border-gray-200 rounded-2xl px-20 py-3">Let us Chat</button>
         </div>
     </div>
   )

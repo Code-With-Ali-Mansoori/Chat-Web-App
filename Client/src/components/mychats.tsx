@@ -2,8 +2,9 @@ const Mychats = () => {
   return (
     <div className="w-full  h-full py">
 
-        <h2 className="ml-1 text-gray-600 font-mono">My Chats</h2>
-        <div className="w-full my-3 h-13 flex justify-between items-center border rounded border-gray-500 p-2 "> 
+        <h2 className="ml-1 text-gray-600 font-mono pt-3">My Chats</h2>
+
+        <div className="w-full my-3 h-13 flex justify-between items-center border rounded border-gray-500 p-2 hover:cursor-pointer hover:bg-gray-100"> 
             <div className=" md: md:pl-">
                 <div className="h-10 w-10 bg-[url('https://static.vecteezy.com/system/resources/previews/019/896/008/non_2x/male-user-avatar-icon-in-flat-design-style-person-signs-illustration-png.png')] bg-cover bg-center cursor-pointer"></div>
             </div>
@@ -18,7 +19,7 @@ const Mychats = () => {
             </div>
         </div>
 
-        <div className="w-full my-3 h-13 flex justify-between items-center border rounded border-gray-500 p-2 "> 
+        <div className="w-full my-3 h-13 flex justify-between items-center border rounded border-gray-500 p-2 hover:cursor-pointer hover:bg-gray-100"> 
             <div className=" md: md:pl-">
                 <div className="h-10 w-10 bg-[url('https://static.vecteezy.com/system/resources/previews/019/896/008/non_2x/male-user-avatar-icon-in-flat-design-style-person-signs-illustration-png.png')] bg-cover bg-center cursor-pointer"></div>
             </div>

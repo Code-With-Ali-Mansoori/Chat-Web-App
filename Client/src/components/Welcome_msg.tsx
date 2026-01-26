@@ -1,9 +1,11 @@
+import welcome_Illusteration from '../utils/welcome.png';
+
 const Welcome_msg = () => {
   return (
     <div className="flex rounded-2xl bg-[url('https://i.pinimg.com/1200x/f7/50/97/f75097d43af0f0541f4e205153d0034d.jpg')] bg-cover bg-center flex-col lg:gap-20 md:gap md:flex-row justify-center  h-full w-full items-center">
 
         <div className="h-68 animate-float md:hidden w-68 p-9 md:h-80 md:w-80">
-          <img src="public/Messages-pana.png" alt="" />
+          <img src={welcome_Illusteration} alt=" UI_illustration" />
         </div>
 
         <div className="pb-8 pl-4 lg:pl-5">
@@ -13,7 +15,7 @@ const Welcome_msg = () => {
         </div>
 
         <div className="h-80 md:pt-12 animate-float hidden md:block w-80 p-9 md:h-80 lg:w-120 lg:h-120 md:w-80 ">
-          <img src="public/Messages-pana.png" alt="" />
+          <img src={welcome_Illusteration} alt=" UI_illustration" />
         </div>
     </div>
   )

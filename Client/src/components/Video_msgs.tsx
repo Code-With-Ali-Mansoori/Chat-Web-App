@@ -7,7 +7,7 @@ const Video_msgs = () => {
   return (
     <div className="w-full h-fit py-2 ">
         <div className={`flex ${isMine ? 'justify-end' : 'justify-start'}  w-full justify-center gap-3`}>
-            <div className={`md:h-8 ${isMine ? 'hidden' : 'block'} mt-1 md:w-8 h-8 w-8`}>
+            <div className={`md:h-8 ${isMine ? 'hidden' : 'block'} hover:cursor-pointer mt-1 md:w-8 h-8 w-8`}>
                     <img className="w-full border border-gray-100 rounded-full  h-full" src="https://png.pngtree.com/png-vector/20231019/ourmid/pngtree-user-profile-avatar-png-image_10211467.png" alt="user_profile_img" />
             </div>
             
@@ -16,10 +16,13 @@ const Video_msgs = () => {
               className="block md:w-80 md:h-40 w-48 h-28 cursor-pointer">
                 <video src="https://www.pexels.com/download/video/35570103/"  loop  controls className="h-full w-full rounded-t-2xl object-cover"/>
               </a>
-              <small className={`${isMine ? "justify-start" : "justify-end"}  p-2 flex justify-end w-full items-center text-right`} >08:33 pm</small>
+              <div className={`${isMine ? "justify-start" : "justify-end"} gap-1  p-2 flex justify-end w-full items-center text-right`} >
+                 <small>Video sent at</small>
+                  <small>08:33 pm</small>
+              </div>
             </div>
 
-            <div className={`md:h-8 ${isMine ? 'block' : 'hidden'} mt-1 md:w-8 h-8 w-8`}>
+            <div className={`md:h-8 ${isMine ? 'block' : 'hidden'} hover:cursor-pointer mt-1 md:w-8 h-8 w-8`}>
                     <img className="w-full border border-gray-100 rounded-full  h-full" src="https://png.pngtree.com/png-vector/20231019/ourmid/pngtree-user-profile-avatar-png-image_10211467.png" alt="user_profile_img" />
             </div>
         </div>

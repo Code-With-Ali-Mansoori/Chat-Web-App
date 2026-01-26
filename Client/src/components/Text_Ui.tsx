@@ -7,7 +7,7 @@ const Text_Ui = () => {
   return (
     <div className=" w-full h-fit py-2">
         <div className={`flex ${ isMine ? "justify-end" : "justify-start" } w-full  gap-3`}>
-            <div className={`md:h-8 ${isMine ? "hidden" : "block"} mt-1 md:w-9 h-8 w-9`}>
+            <div className={`md:h-8 ${isMine ? "hidden" : "block"} hover:cursor-pointer mt-1 md:w-9 h-8 w-9`}>
                     <img className="w-full  border border-gray-100 rounded-full h-full" src="https://png.pngtree.com/png-vector/20231019/ourmid/pngtree-user-profile-avatar-png-image_10211467.png" alt="user_profile_img" />
             </div>
 
@@ -19,7 +19,7 @@ const Text_Ui = () => {
                   ${isMine ? "justify-start" : "justify-end"} `}>08:33 pm</small>
             </div>
 
-            <div className={`md:h-8 ${isMine ? "block" : "hidden"} mt-1 md:w-9 h-8 w-9`}>
+            <div className={`md:h-8 ${isMine ? "block" : "hidden"} hover:cursor-pointer mt-1 md:w-9 h-8 w-9`}>
                     <img className="w-full border border-gray-100 rounded-full h-full" src="https://png.pngtree.com/png-vector/20231019/ourmid/pngtree-user-profile-avatar-png-image_10211467.png" alt="user_profile_img" />
             </div>
 
