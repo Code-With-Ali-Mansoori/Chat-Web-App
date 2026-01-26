@@ -108,7 +108,13 @@ try {
         return res.status(200).json({message : "No Room is Created Yet!"})
     };
 
-    return res.status(200).json({message : All_Rooms});
+    const my_Rooms = All_Rooms.map((rooms) => ({
+        roomId : rooms._id,
+        members : rooms?.members,
+        last_Msg  : rooms.last_Msg
+    }));
+
+    return res.status(200).json({message : my_Rooms});
         
 } catch (error) {
     console.log(error);
@@ -134,8 +140,15 @@ export const specific_user = async (req : Request, res : Response) => {
             return res.status(404).json({message : "User not found in DB!"});
         };
 
-        res.status(200).json({"user_id" : user});
-        return
+        res.status(200).json({message : {
+            userId : user._id,
+            username : user.username,
+            userAvatar : user.user_avatar,
+            active_status : user.Active_Status,
+            last_active : user.Last_active,
+        }});
+
+        return;
         
     } catch (error) {
         console.log(error);
