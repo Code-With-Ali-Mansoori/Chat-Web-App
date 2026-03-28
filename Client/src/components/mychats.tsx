@@ -1,42 +1,40 @@
-const Mychats = () => {
+import useMyChat_Rooms from "../Hooks/useMy.Chats";
+import SMchatRoomsUI from "./SMchatRooms";
+import notFoundIllustrate from '../utils/data.png'
+
+export type RoomMember = {
+  admin_Userid: string;
+  Other_Userid: string;
+};
+
+export type ChatRoom = {
+  roomId: string;
+  members: RoomMember[];
+  last_Msg: null | string; 
+};
+
+const Mychats = () => { 
+  const {data} = useMyChat_Rooms();
+  const myRooms = data?.data?.message;
+
   return (
-    <div className="w-full  h-full py">
+    <div className="w-full h-full py">
+      <h2 className="ml-1 text-gray-600 font-mono pt-3">My Chats</h2>
 
-        <h2 className="ml-1 text-gray-600 font-mono pt-3">My Chats</h2>
+      { myRooms && typeof(myRooms) !== 'string' && (myRooms.map((room : ChatRoom) => (
+           <SMchatRoomsUI key={room.roomId} roomId={room.roomId}/>
+        )))
+      }
+         
+      { typeof(myRooms) === 'string' && 
+        <div className="w-full">
+          <img className="md:h-96 md:w-96 mx-auto" src={notFoundIllustrate} alt="Record_not_found" />
+          <h1 className="md:text-2xl md:font-medium text-gray-500 text-center">No Chat-room is Created Yet!</h1>
+        </div> 
+      }
 
-        <div className="w-full my-3 h-13 flex justify-between items-center border rounded border-gray-500 p-2 hover:cursor-pointer hover:bg-gray-100"> 
-            <div className=" md: md:pl-">
-                <div className="h-10 w-10 bg-[url('https://static.vecteezy.com/system/resources/previews/019/896/008/non_2x/male-user-avatar-icon-in-flat-design-style-person-signs-illustration-png.png')] bg-cover bg-center cursor-pointer"></div>
-            </div>
-
-            <div className="flex w-4/6 p-1 px-3 flex-col justify-center items-start">
-                <p >Ali_Mansoori123</p>
-                <small className="font-light">today 12:20 am</small>
-            </div>
-
-            <div className="md: flex justify-end w-2/6">
-                <small className="items-end px-1 text-green-600">online</small>
-            </div>
-        </div>
-
-        <div className="w-full my-3 h-13 flex justify-between items-center border rounded border-gray-500 p-2 hover:cursor-pointer hover:bg-gray-100"> 
-            <div className=" md: md:pl-">
-                <div className="h-10 w-10 bg-[url('https://static.vecteezy.com/system/resources/previews/019/896/008/non_2x/male-user-avatar-icon-in-flat-design-style-person-signs-illustration-png.png')] bg-cover bg-center cursor-pointer"></div>
-            </div>
-
-            <div className="flex w-4/6 p-1 px-3 flex-col justify-center items-start">
-                <p >Ali_Mansoori123</p>
-                <small className="font-light">today 12:20 am</small>
-            </div>
-
-            <div className="md: flex justify-end w-2/6">
-                <small className="items-end px-1 text-green-600">online</small>
-            </div>
-        </div>
-
- 
     </div>   
   )
-}
+};
 
 export default Mychats;

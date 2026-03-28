@@ -21,7 +21,6 @@ try {
     
     if ( !decoded ) {
         console.log(decoded);
-        
         return res.status(400).json({message : "Token is invalid"})
     };
 

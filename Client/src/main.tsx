@@ -2,10 +2,21 @@
 import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.tsx'
-import { BrowserRouter } from 'react-router-dom'
+import { BrowserRouter } from 'react-router-dom';
+import { QueryClientProvider, QueryClient } from '@tanstack/react-query';
+import { ContextHanlder_Function } from './Context/ContectFunction.tsx';
+import SocketProvider from './Context/SocketProvider.tsx';
+
+const queryClient = new QueryClient();
 
 createRoot(document.getElementById('root')!).render(
-    <BrowserRouter>
-        <App />
-    </BrowserRouter>
+        <BrowserRouter> 
+            <QueryClientProvider client={queryClient}>
+                <SocketProvider>
+                    <ContextHanlder_Function>
+                        <App /> 
+                    </ContextHanlder_Function>
+                </SocketProvider>
+            </QueryClientProvider>
+        </BrowserRouter>
 )

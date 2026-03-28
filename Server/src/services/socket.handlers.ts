@@ -3,9 +3,6 @@ import user_model from "../model/user_schema";
 import message_model from "../model/msg_schema";
 import room_model from "../model/chat_room_schema";
 import { Decrypt_msg, Encrypt_msg } from "../utils/secure_msg";
-// import { Types } from "mongoose";
-// import { AuthPayload } from "../middlewares/auth_jwt";
-// import jwt from 'jsonwebtoken';
 
 export const sockets_connect = async (socket : Socket) => {
 try {
@@ -14,11 +11,13 @@ try {
     const userDB = await user_model.findById({_id : userId });
     if (!userDB) return socket.disconnect();
 
-    await user_model.findByIdAndUpdate(userDB._id, { Active_Status: true });
+    await user_model.findByIdAndUpdate(userDB._id, { Active_Status: true });        
+    return;
 
 } catch (error) {
     socket.disconnect();
     console.log('User disconnected!');
+    return;
 
 }};
 
@@ -28,7 +27,7 @@ try {
     await user_model.findByIdAndUpdate({_id : userId}, { Active_Status: false });
         
     socket.disconnect();
-    // console.log("Socket disconnected:", socket.id);
+    return;
 
 } catch (error) {
     console.log(error);
@@ -38,6 +37,7 @@ try {
 
 export const handle_Send_Msg = async ( msg : any, msg_type : any, sender_id: any, room_id : any ) => {
 try {
+    
     const our_room = await room_model.findById({_id : room_id});
 
     if (!our_room) {
@@ -59,43 +59,76 @@ try {
         last_Msg: store_msg._id
     }, { new: true });
 
+    return {msg_Id : store_msg._id, mesg : msg};
+
 } catch (error) {
     console.log(error);
     console.log('Erorr in Send-Message Logic in Sockets!');
-
+    return;
 }};
 
 export const handleSeen = async (socket : Socket, room_id : any) => {
-    
     const usersId = socket.data.user.userId;
     socket.join(room_id);
 
-    if (!usersId) {throw new Error('UserID not found for Seen Feature!')}
-    
-    await message_model.updateMany({
-        room_id : room_id,
-        sender_id : { $ne: usersId },  
-        msg_seenBy : null
-    },
-    {$set : {
-        msg_seenBy : usersId
-    }});
+    if (!usersId) {
+        throw new Error('UserID not found for Seen Feature!');
+    }
 
+    const result = await message_model.updateMany({
+        room_id: room_id,
+        sender_id: { $ne: usersId },
+        msg_seenBy: null
+    }, {
+        $set: {
+            msg_seenBy: usersId
+        }
+    });
+
+    //New Added by AI
+    if (result.modifiedCount > 0) {
+        const updatedMessages = await message_model.find({
+            room_id: room_id,
+            sender_id: { $ne: usersId },
+            msg_seenBy: usersId
+        }).select('_id');
+
+        return updatedMessages.map((m) => m._id.toString());
+    }
+
+    return [];
 };
+
+export const instantMsg_Seen = async (  msg_Id : string, socket : any) => {
+    try {
+        if ( !msg_Id ) {
+            return console.log('Required all fields for Instant Msg_Seen Feature');
+        };
+
+        const myId = socket.data.user.userId;
+        await message_model.findOneAndUpdate({_id : msg_Id}, { $set: { msg_seenBy: myId } });
+
+    } catch (error) {
+        console.log(error);
+        return
+    }    
+};  
 
 // export const handle_reciver_msg = async (room_id : any) => {
 // try {
 
+//     if (!room_id) return console.log('Msg_Room Id Not Found!');
+    
 //     const all_msg_data = await message_model.find({room_id :room_id});
 
-//     if (all_msg_data.length === 0) return console.log('Dtaa not found in room');
-
-//     return all_msg_data.map((msg) => {
+//     if (all_msg_data) {
+    
+//         return all_msg_data.map((msg) => {
 
 //         const msgs = Decrypt_msg({
-//             msg_content: msg.msg_content.toString(),
-//             msg_iv: msg.msg_iv.toString(),
-//             msg_tag: msg.msg_tag.toString()
+//             msg_content: msg!.msg_content!.toString(),
+//             msg_iv: msg!.msg_iv!.toString(),
+//             msg_tag: msg!.msg_tag!.toString()
 //         });
 
 //         return {
@@ -105,8 +138,11 @@ export const handleSeen = async (socket : Socket, room_id : any) => {
 //             msg_sender: msg.sender_id,
 //             msg_seenBy : msg.msg_seenBy
 //         };
+    
 //     });
-
+//     } else {
+//         return console.log('Data not found in room');
+//     };
     
 // } catch (error) {
 //     console.log(error);

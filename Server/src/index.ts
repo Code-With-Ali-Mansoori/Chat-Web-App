@@ -13,6 +13,7 @@ import http from 'node:http';
 import {Server} from 'socket.io';
 import './utils/secure_msg';
 import'./config/cloudinary.config';
+import cors from 'cors'
 
 const app = express();
 const node_server = http.createServer(app);
@@ -27,7 +28,13 @@ DB_Connection(process.env.MONGO_URI as string)
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(passport.initialize());
-app.use(cookieParser())
+app.use(cookieParser());
+app.use(cors({
+  origin: 'http://localhost:5173',
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  credentials: true,
+}));
 
 //EJS setup
 app.set('view engine', 'ejs');
@@ -37,7 +44,7 @@ app.set("views", path.join(__dirname, "views"));
 app.use('/oauth', oauth_route);
 app.use('/', app_route);
 
-// Start server
+//Start server
 node_server.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });

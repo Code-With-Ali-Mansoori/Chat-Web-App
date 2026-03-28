@@ -3,6 +3,7 @@ import Profile_pg from "./Profile_pg"
 import Side_Bar from "./Side_Bar"
 
 const User_Profile = () => {
+
   return (
     <div className="flex relative w-full h-screen p-1">
         

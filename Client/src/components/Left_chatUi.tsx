@@ -1,19 +1,21 @@
 import { Search } from "lucide-react"
 import Mychats from "./mychats"
 import { useNavigate } from "react-router-dom";
+import useProfile_Hooks from "../Hooks/Profile.Hook";
 
 const Left_chatUi = () => {
 
   const navigator =  useNavigate();
+  const { data } = useProfile_Hooks();
 
   return (
     <div className=" h-full w-full">
         
         <div className="pt-5 w-full flex gap-3 justify-center items-center">
 
-            <div onClick={() => {navigator('/user/profile')}} className=" mx-3 pl-2">
+            <div onClick={() => {navigator('/profile')}} className=" mx-3 pl-2">
              <div className="h-12 w-12 hover:cursor-pointer">
-                    <img className="w-full h-full" src="https://static.vecteezy.com/system/resources/previews/019/896/008/non_2x/male-user-avatar-icon-in-flat-design-style-person-signs-illustration-png.png" alt="user_profile_img" />
+                    <img className="w-full h-full rounded-full" src={data?.message.data.avatar} alt="user_profile_img" />
             </div>
             </div>
             

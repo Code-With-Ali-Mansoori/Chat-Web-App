@@ -19,12 +19,16 @@ try {
     );
 
     const token = cookies.token; 
-    if (!token) {return socket.disconnect()};
+    
+    if (!token) {
+      console.log("No Token found");
+      return socket.disconnect()
+    };
 
     const decoded  = jwt.verify(token, process.env.JWT_SECRET as string) as AuthPayload
         
     if ( !decoded ) {
-        console.log("No Token found");
+        console.log("No Data found");
         return socket.disconnect();        
     };
 

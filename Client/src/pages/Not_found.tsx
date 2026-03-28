@@ -2,7 +2,7 @@ import pageNotFound from '../utils/pageNotFound.png';
 
 const PageNotFound = () => {
   return (
-    <div className="w-full h-full py-1 px-4 md:p-10 bg-gray-50">
+    <div className="w-full  h-full py-1 px-4 md:p-10 bg-gray-50">
       <div className="relative  border border-gray-200 w-full h-full bg-white rounded-3xl  overflow-hidden flex items-center">
         
         {/* Soft background shapes */}

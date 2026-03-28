@@ -6,6 +6,7 @@ import Search_sction from '../components/Search_sction';
 import { Outlet } from 'react-router-dom';
 
 const App_structure = () => {
+
   return (
     <div className="flex relative w-full h-screen p-1">
         {/* Left Menu Bar */}
@@ -15,7 +16,7 @@ const App_structure = () => {
         <div className="w-full h-full px-3">
 
             {/* Header component */}
-            <div className='h-17 relative border-b border-gray-300 md:gap-10 flex justify-between items-center'>
+            <div className='h-17 relative border-b border-gray-300 md:gap- flex justify-between items-center'>
                 <Profile_Section/>
                 <Search_sction/>
             </div>

@@ -10,9 +10,9 @@ interface User_Type extends Document {
     provider : 'Google' | 'Facebook',
     provider_name : string,
     provider_Id : string,
-    isProfileCompleted : Boolean
+    isProfileCompleted : boolean
     Last_active? : Date,
-    Active_Status : Boolean
+    Active_Status : boolean,
 };
 
 const user_schema = new mongoose.Schema<User_Type>({

@@ -19,7 +19,6 @@ oauth_route.get('/profile',( req : express.Request ,res : express.Response ) => 
 // oauth_route.get('/welcome', authCheck , welcome_sockets); 
 // oauth_route.get('/chat', authCheck , chat_sockets); 
 
-
 //Google
 oauth_route.get("/auth/google", 
     passport.authenticate('google', { scope: ['profile', 'email'], session: false })

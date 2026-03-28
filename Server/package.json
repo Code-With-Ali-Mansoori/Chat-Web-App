@@ -22,7 +22,7 @@
     "@types/passport": "^1.0.17",
     "@types/passport-facebook": "^3.0.4",
     "cloudinary": "^2.8.0",
-    "cors": "^2.8.5",
+    "cors": "^2.8.6",
     "datauri": "^4.1.0",
     "dotenv": "^17.2.3",
     "nodemon": "^3.1.11",

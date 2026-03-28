@@ -8,13 +8,22 @@ import {cloudinary} from '../config/cloudinary.config'
 import path from "path";
 const DatauriParser = require('datauri/parser');
 
+export type ChatUserData = {
+  userId?: string;
+  email?: string;
+  username?: string;
+  user_avatar?: string;
+  active_Status?: boolean;
+  last_active?: Date;        // ISO date string
+  public_user_id?: string;
+};
+
 export const create_room_handler = async (req: Request, res: Response ) => {
 try {
-
-    const ID = req.body;
+    const {userId} = req.body;
     const users = req.user as AuthPayload;
 
-    if ( !ID || !ID.other_Members_ProviderId) {
+    if ( !userId ) {
         return res.status(404).json({message : "Member's ID is required"});
     };
 
@@ -23,9 +32,9 @@ try {
     };
 
     const admin_member = await user_model.findOne({provider_Id : users.provider_Id});
-    const other_member = await user_model.findOne({ provider_Id : ID.other_Members_ProviderId });  
+    const other_member = await user_model.findOne({ Public_user_id : userId });  
     
-    if ( !admin_member || !other_member ) {
+    if ( !admin_member || !other_member ) {        
         return res.status(404).json({message : "User not Found"})
     };
 
@@ -41,7 +50,8 @@ try {
     });
 
     if ( isRoomExist ) {
-        return res.status(200).json({message : 'Room is Already Existed', isRoomExist });
+        return res.status(200).json(
+            {message : 'Room is Already Existed', data : isRoomExist });
     };
 
     // Learn in this Project
@@ -60,7 +70,7 @@ try {
 
     return res.status(201).json({
       message: "Room created successfully",
-      room
+      data: room
     });
         
 } catch (error) {
@@ -69,7 +79,6 @@ try {
     return res.status(500).json({
       message: "Error in Server"
     }); 
-
 }};
 
 export const search_my_rooms = async (req: Request, res: Response ) => {
@@ -91,7 +100,7 @@ try {
     
     const user_Id = db_user._id;
 
-    // Learn in this Project
+    // Learn in this Proje00ct
     const All_Rooms = await room_model.find({     // MongoDB query to get all rooms of a user!
         isGroup : false,
         members : {
@@ -128,21 +137,25 @@ try {
 export const specific_user = async (req : Request, res : Response) => {
     try {
 
-        const user_id = req.body.id;
+        // const user_id = req.query.id;
+        const public_Id = req.params.id as string;
 
-        if (!user_id) {
+        if (!public_Id) {
+            console.log('Erorr in 1st');
             return res.status(404).json({message : "User ID is required!"});
         };
 
-        const user = await user_model.findById(user_id);
+        const user = await user_model.findOne({Public_user_id: public_Id});
 
         if (!user) {
+            console.log('Erorr in 2st');
             return res.status(404).json({message : "User not found in DB!"});
         };
-
+        
         res.status(200).json({message : {
             userId : user._id,
             username : user.username,
+            user_publicId : user.Public_user_id,
             userAvatar : user.user_avatar,
             active_status : user.Active_Status,
             last_active : user.Last_active,
@@ -157,6 +170,63 @@ export const specific_user = async (req : Request, res : Response) => {
     }
 };
 
+export const EveryUserData =  async (req : Request, res : Response) => {
+try { 
+    const users = req.user as AuthPayload;
+    const roomId = req.params.roomId;
+
+    if (!roomId) {
+        console.log('Erorr in 1st');
+        return res.status(404).json({message : 'Room ID is required in Parameter!'})
+    };
+
+    if (!users) {
+        console.log('Erorr in 1st');
+        return res.status(401).json({message : 'User is Un-Authorized!'})
+    };
+
+    const myData = await user_model.findOne({email : users.email});
+    const Rooms = await room_model.findById(roomId);
+
+    const userId = myData?._id.toString();
+    const userId_1 = Rooms?.members?.[0]?.admin_Userid.toString();
+    const userId_2 = Rooms?.members?.[0]?.Other_Userid.toString();
+
+    let otherUserId : string | undefined;
+
+    if (userId_1 === userId) {
+        otherUserId = userId_2;
+
+    } else if (userId_2 === userId) {
+        otherUserId = userId_1;
+
+    };  
+
+    const otherUser_Data = await user_model.findById(otherUserId);
+
+    const userData: ChatUserData = {
+        userId : otherUser_Data?._id.toString(),
+        email : otherUser_Data?.email,
+        username : otherUser_Data?.username,
+        user_avatar : otherUser_Data?.user_avatar,
+        active_Status : otherUser_Data?.Active_Status,
+        last_active : otherUser_Data?.Last_active,
+        public_user_id : otherUser_Data?.Public_user_id,
+    };
+    
+    res.status(200).json({
+        message : userData 
+    });
+
+    return;
+
+ } catch (error) {
+    console.log(error);
+    res.status(500).json({'error' : error});
+    return;
+ 
+}};
+
 //fetch in Chat!
 export const get_Old_Msgs = async (req : Request, res : Response) => {
     try {
@@ -168,7 +238,6 @@ export const get_Old_Msgs = async (req : Request, res : Response) => {
         };
 
         const all_msg_data = await message_model.find({room_id :roomid});
-        
     
         if (all_msg_data.length === 0) {
             return res.status(200).json({message : 'No data found in a chat!'})
@@ -230,7 +299,9 @@ try {
     let parser = new DatauriParser();
 
     const dataUri = parser.format(path.extname(file.originalname), file.buffer);
-    const uploadedMedia = await cloudinary.uploader.upload(dataUri.content);
+    
+    // { resource_type: "auto" } => It will automaticlly hanlder types of Files!
+    const uploadedMedia = await cloudinary.uploader.upload(dataUri.content, { resource_type: "auto"});
 
     //2. Store Cloudinary_URL and Public_Id in DB
 
@@ -246,16 +317,20 @@ try {
             media_url : uploadedMedia.url,
             media_publicId : uploadedMedia.public_id
         }
-    })
+    });
+
     //3. Return that store data to res
-    return res.status(200).json({message : 'Media Store in Backend', data : {
+    const data = {
+        msg_id : mediaDB._id,
         roomId : mediaDB.room_id,
         senderId : mediaDB.sender_id,
         mediaURL : mediaDB.media?.media_url
-    }});
+    };
+
+    return res.status(200).json({message : 'Media Store in Backend', data: data});
         
 } catch (error) {
-    console.log(error);
+    console.log('0987654',error);
     return res.status(500).json({message : 'Erorr in Media_Msg Controller'});
     
 }};
