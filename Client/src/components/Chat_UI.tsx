@@ -46,6 +46,7 @@ const Chat_UI = () => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [fileValidationError, setFileValidationError] = useState<string | null>(null);
   const [fileValidationSuccess, setFileValidationSuccess] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState<boolean>(false);
   // const [mediaData, setMediaData] = useState<Media_Data | null>(null);
 
   const navigator =  useNavigate();
@@ -242,35 +243,42 @@ const Chat_UI = () => {
         console.log("File OR UserId OR RoomId Not found!");
         return;
       };
-      
-      const formData = new FormData();
-      formData.append("file", selectedFile); //Same name as multer in backend
-      formData.append("senderId", myProfile?.message.data.user_id);
-      formData.append("roomId", roomId);
 
-      const res = await axios.post('http://localhost:5000/room/msgs/media', formData , {withCredentials : true});
+      setIsUploading(true);
 
-      if (res.status != 200) {
-        setSelectedFile(null);
-        setFileValidationError('Error in File Sharing!');
-        setFileValidationSuccess(null);
-        return 
-      };
+      try {
+        const formData = new FormData();
+        formData.append("file", selectedFile); //Same name as multer in backend
+        formData.append("senderId", myProfile?.message.data.user_id);
+        formData.append("roomId", roomId);
 
-      clearSelectedFile();
+        const res = await axios.post('http://localhost:5000/room/msgs/media', formData , {withCredentials : true});
 
-      const mediaType = getFileTypeCategory(res?.data?.data?.mediaURL);
-      // console.log(res.data.data);
-      
-      socket.emit('send-media', {
-        msg_id : res.data.data.msg_id,
-        roomId : res.data.data.roomId,
-        sender_Id : res.data.data.senderId,
-        media_URL : res.data.data.mediaURL,
-        media_Type : mediaType
-      }); 
+        if (res.status != 200) {
+          setSelectedFile(null);
+          setFileValidationError('Error in File Sharing!');
+          setFileValidationSuccess(null);
+          return 
+        };
 
-      return;
+        clearSelectedFile();
+
+        const mediaType = getFileTypeCategory(res?.data?.data?.mediaURL);
+        // console.log(res.data.data);
+        
+        socket.emit('send-media', {
+          msg_id : res.data.data.msg_id,
+          roomId : res.data.data.roomId,
+          sender_Id : res.data.data.senderId,
+          media_URL : res.data.data.mediaURL,
+          media_Type : mediaType
+        }); 
+      } catch (error) {
+        setFileValidationError('Error uploading file!');
+        console.error('Upload error:', error);
+      } finally {
+        setIsUploading(false);
+      }
     };
 
   // (listener moved to useEffect to prevent duplicate registrations)
@@ -344,7 +352,7 @@ const Chat_UI = () => {
           </div> 
             
             {/* File Validation Messages */}
-            <div className="mt-2 flex-col gap-1 absolute flex justify-center items-center w-full pr-4">
+            { !isUploading && <div className="mt-2 flex-col gap-1 absolute flex justify-center items-center w-full pr-4">
               {/* File Erorr UI*/}
               {fileValidationError && (
                 <div className="text-red-500 text-sm px-3 py-2 bg-red-50 rounded border border-red-200">
@@ -358,7 +366,19 @@ const Chat_UI = () => {
                   {fileValidationSuccess}
                 </div>
               )}
-            </div>
+
+              
+            </div>}
+
+            {/* Uploading Loader */}
+            
+              {isUploading && ( <div className="w-full flex justify-center items-center">
+                <div className=" flex justify-center  text-sm px-3 py-2 text-black rounded w-fit items-center gap-2">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 "></div>
+                  Uploading...
+                </div>
+              </div>)}
+            
         </div>
 
         
@@ -403,8 +423,8 @@ const Chat_UI = () => {
                     </div>
                   )}
 
-                    <div onClick={ () => !selectedFile ? hanlde_UserMessage_Sending() : handleMediaSending() } className="flex hover:cursor-pointer justify-center items-center gap-2 border px-2 py-1 border-gray-400  rounded md:rounded-2xl">
-                        <button>{ selectedFile ? 'Upload': 'Send'} </button>
+                    <div onClick={ () => !selectedFile ? hanlde_UserMessage_Sending() : handleMediaSending() } className={`flex hover:cursor-pointer justify-center items-center gap-2 border px-2 py-1 border-gray-400 rounded md:rounded-2xl ${isUploading ? 'opacity-50 cursor-not-allowed' : ''}`}>
+                        <button disabled={isUploading}>{ selectedFile ? (isUploading ? 'Uploading...' : 'Upload') : 'Send'} </button>
                         <SendHorizontal className="sm:inline hidden text-gray-500" strokeWidth={1.25} />
                     </div>
 
