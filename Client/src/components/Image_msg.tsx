@@ -3,6 +3,7 @@ import type { NewMessage } from "./Chat_UI";
 import useProfile_Hooks from "../Hooks/Profile.Hook";
 import useOtherUser from "../Hooks/useOtherUser";
 import { useSearchParams } from "react-router-dom";
+import { handle_Time_in_HR } from "../helper/date";
 
 interface msgSeen {
   recived_msg : NewMessage
@@ -18,6 +19,7 @@ const Image_msgs = ({recived_msg, msg_seen} : msgSeen) => {
   const { data : Other_UserData } = useOtherUser(publicId);
 
   const isMine = recived_msg.sender_id === myProfile?.message.data.user_id;  
+  const Sent_Time = handle_Time_in_HR(recived_msg.SentAt!);
 
   return (
     <div className="w-full h-fit py-2 ">
@@ -35,7 +37,7 @@ const Image_msgs = ({recived_msg, msg_seen} : msgSeen) => {
               <div className={`p-2 flex w-full items-center gap-1
                   ${isMine ? "justify-start" : "justify-end"} `}>
                     <small>Image sent at</small>
-                    <small>08:33 pm</small>
+                    <small>{Sent_Time.length > 0 && Sent_Time}</small>
                   </div>
             </div>
 

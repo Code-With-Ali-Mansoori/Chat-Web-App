@@ -29,7 +29,8 @@ export type NewMessage = {
   room_id?: string;
   is_msgSeen? : boolean;
   Media_data? : Media_Data;
-  Text_data? : Text_Data
+  Text_data? : Text_Data;
+  SentAt? : string | ''
 };
 
 type Message = {
@@ -87,7 +88,8 @@ const Chat_UI = () => {
             is_msgSeen: data.msg_seenBy != null ? true : false,
             Text_data: {
               msg: data.msg
-            }
+            },
+            SentAt : data.sentAt
           };
         } else {
           // File/Media message
@@ -102,7 +104,8 @@ const Chat_UI = () => {
             Media_data: {
               File_url: data.mediaURL || '',
               File_type: mediaType
-            }
+            },
+            SentAt : data.sentAt
           };
         }
       });
@@ -140,7 +143,8 @@ const Chat_UI = () => {
             is_msgSeen : false,
             Text_data : {
               msg
-            }
+            },
+            SentAt: new Date().toISOString()
           }]);
 
         const myId = myProfile?.message?.data?.user_id;
@@ -166,7 +170,8 @@ const Chat_UI = () => {
             Media_data : {
               File_url : media_URL,
               File_type : media_Type
-            }
+            },
+            SentAt: new Date().toISOString()
           }]);
 
         const myId = myProfile?.message?.data?.user_id;
