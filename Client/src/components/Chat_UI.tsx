@@ -32,6 +32,16 @@ export type NewMessage = {
   Text_data? : Text_Data
 };
 
+type Message = {
+  msg_id: string;
+  msg?: string;
+  msg_type: 'text' | 'Media-file';
+  mediaURL? : string,
+  msg_sender: string;
+  msg_seenBy: string[] | null;
+  sentAt: string;
+};
+
 // then Chat-UI hit one more get/api [ /chat-room/users/publicId=:id ] for userdata
 const Chat_UI = () => {
     
@@ -41,13 +51,11 @@ const Chat_UI = () => {
   const [userMessgae, setUserMessgae] = useState<string>('');
 
   const [newMessages, setnewMessages] = useState<NewMessage[]>([]);
-  // const [newMedia_File, setMedia_File] = useState<Media_Data[]>([]);
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [fileValidationError, setFileValidationError] = useState<string | null>(null);
   const [fileValidationSuccess, setFileValidationSuccess] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState<boolean>(false);
-  // const [mediaData, setMediaData] = useState<Media_Data | null>(null);
 
   const navigator =  useNavigate();
   const socket = useSocket();
@@ -59,9 +67,55 @@ const Chat_UI = () => {
   const { data : Other_UserData } = useOtherUser(publicId);
   const { data : myProfile } = useProfile_Hooks();
 
+  const handle_Load_Old_Chats = async (roomId : string) => {
+      const res = await axios.get(`http://localhost:5000/chat-room/all_messages/${roomId}`,{withCredentials : true});
+
+      if (res.status !== 200 || !Array.isArray(res.data.message)) {
+        console.log('No Msg-Data found!');
+        return;
+      };
+
+      // Build array of all messages
+      const loadedMessages: NewMessage[] = res.data.message.map((data : Message) => {
+        
+        if (data.msg_type === 'text' && data.msg) {
+          return {
+            msg_Id: data.msg_id,
+            sender_id: data.msg_sender,
+            msg_type: 'text',
+            room_id: roomId,
+            is_msgSeen: data.msg_seenBy != null ? true : false,
+            Text_data: {
+              msg: data.msg
+            }
+          };
+        } else {
+          // File/Media message
+          const mediaType = getFileTypeCategory(data.mediaURL!);
+          
+          return {
+            msg_Id: data.msg_id,
+            sender_id: data.msg_sender,
+            msg_type: 'file',
+            room_id: roomId,
+            is_msgSeen: data.msg_seenBy != null ? true : false,
+            Media_data: {
+              File_url: data.mediaURL || '',
+              File_type: mediaType
+            }
+          };
+        }
+      });
+
+      // Set all messages at once (prevents overwrites)
+      setnewMessages(loadedMessages);
+  };
+
   useEffect(() => {
     if (!roomId) return;
     socket.emit('join-room', roomId);
+
+    handle_Load_Old_Chats(roomId);
 
     return () => {
       socket.emit('leave-room', roomId);
@@ -273,6 +327,7 @@ const Chat_UI = () => {
           media_URL : res.data.data.mediaURL,
           media_Type : mediaType
         }); 
+
       } catch (error) {
         setFileValidationError('Error uploading file!');
         console.error('Upload error:', error);
@@ -313,8 +368,8 @@ const Chat_UI = () => {
 
         <div className="h-4/5 relative z-1 1 p-3 border-b border-gray-400 chat-scroll2 overflow-y-scroll overflow-x-hidden"> 
 
-        {/* All Messgaes */}
-        <div>
+            {/* All Messgaes */}
+            <div>
             { newMessages.length > 0 && newMessages.map((m) => (
                 m.msg_type === 'text' && m.Text_data?.msg ?  //Text msg
                   <Text_Ui key={m.msg_Id} recived_msg={m} msg_seen={Boolean(m?.is_msgSeen)} /> 
@@ -342,14 +397,14 @@ const Chat_UI = () => {
                     <span className="type-text">Typing...</span>
                 </div>
             </div>
-        </div>
+            </div>
 
             {/* Emoji Picker */}
-          <div className="fixed bottom-20 left-5 md:left-148 md:bottom-28 z-90 ">
+            <div className="fixed bottom-20 left-5 md:left-148 md:bottom-28 z-90 ">
             { isEmoji_Click && (
                 <Picker  width={255} height={360} onEmojiClick={onEmojiClick} /> 
             )}
-          </div> 
+            </div> 
             
             {/* File Validation Messages */}
             { !isUploading && <div className="mt-2 flex-col gap-1 absolute flex justify-center items-center w-full pr-4">
@@ -371,14 +426,12 @@ const Chat_UI = () => {
             </div>}
 
             {/* Uploading Loader */}
-            
               {isUploading && ( <div className="w-full flex justify-center items-center">
                 <div className=" flex justify-center  text-sm px-3 py-2 text-black rounded w-fit items-center gap-2">
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 "></div>
                   Uploading...
                 </div>
-              </div>)}
-            
+              </div>)}        
         </div>
 
         
