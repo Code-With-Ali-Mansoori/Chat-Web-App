@@ -56,9 +56,51 @@ io.on("connection", (socket) => {
 
     //8. Media
     socket.on('send-media', (data) => {
-
         const { msg_id, roomId, sender_Id, media_URL, media_Type } = data;        
         io.to(roomId).emit('receive-media', msg_id, sender_Id, media_URL, media_Type, roomId); //Both user will got!
+    });
+
+    //9.Audio Calling ( WebRTC )
+    socket.on('audio-call-invite', (room_id, callerId) => {
+        socket.to(room_id).emit('incomming-audio-call', room_id, callerId); 
+    });
+
+    socket.on('reject-audio-call', (roomId, otherUserId) => {        
+        socket.to(roomId).emit('reject-audio-called', roomId, otherUserId); 
+    });
+
+    socket.on('end-audio-call', (roomId, Call_EnderId) => {        
+        io.to(roomId).emit('end-audio-called', roomId); 
+    });
+
+    socket.on('accept-audio-call', (roomId, reciverId) => {
+        io.to(roomId).emit('audio-call-accepted', roomId, reciverId);
+    });
+
+    socket.on('audio-call-offer', (offer, roomId) => {
+        socket.to(roomId).emit('Offer-audio-call', offer, roomId);
+    });
+
+    socket.on('answer-audio-call', (answer, roomId) => {        
+        socket.to(roomId).emit("answered-audio-call", answer, roomId );
+    });
+
+    socket.on('Audio-call-Connected', (roomId) => {
+        io.to(roomId).emit("connected-audio-call");
+    });
+
+    socket.on('ice-candidate', (candidate, roomId) => {
+        socket.to(roomId).emit('ice-candidate2', candidate);
+    });
+
+    socket.on('audio-call-mute', (roomId, otherUser) => {
+        // console.log('Muted');  
+        io.to(roomId).emit('muted-audio')
+    });
+
+    socket.on('audio-call-unmute', (roomId, otherUser) => {
+        // console.log('Unmuted'); 
+        io.to(roomId).emit('unmuted-audio')
     });
          
     //8. Disconnect Socket

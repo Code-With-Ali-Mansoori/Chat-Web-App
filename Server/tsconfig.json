@@ -1,5 +1,4 @@
 {
-  // "include": ["src", "src/types"],
   "compilerOptions": {
     "target": "ES2020",
     "module": "CommonJS",
@@ -12,6 +11,7 @@
     "skipLibCheck": true,
 
     "moduleResolution": "node",
+    "ignoreDeprecations": "6.0",
     "resolveJsonModule": true,
     "sourceMap": true
   },

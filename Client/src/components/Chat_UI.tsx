@@ -50,15 +50,13 @@ const Chat_UI = () => {
   const [isTyping, setIsTyping] = useState<boolean>(false); 
   const [isEmoji_Click, SetIsEmoji_Click] = useState<boolean>(false);
   const [userMessgae, setUserMessgae] = useState<string>('');
-
   const [newMessages, setnewMessages] = useState<NewMessage[]>([]);
-
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [fileValidationError, setFileValidationError] = useState<string | null>(null);
   const [fileValidationSuccess, setFileValidationSuccess] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState<boolean>(false);
 
-  const navigator =  useNavigate();
+  const navigator = useNavigate();
   const socket = useSocket();
 
   const [searchParams] = useSearchParams();
@@ -197,6 +195,11 @@ const Chat_UI = () => {
     //NEW - UPDATE UI FOR SEEN IN Staying in Room
     socket.on('update_seen', (msg_Id) => {
       setnewMessages((prev) => prev.map((m) => (m.msg_Id === msg_Id ? { ...m, is_msgSeen: true } : m)));
+
+    });
+
+    socket.on('incomming-audio-call', (room_id, callerId) => {
+        navigator(`/incoming-audio-call/?roomId=${room_id}&Caller-User-Id=${callerId}`)
     });
 
     return () => {
@@ -206,8 +209,10 @@ const Chat_UI = () => {
       socket.off('update_seen');
       socket.off('update_seen_many');
       socket.off('receive-media');
+      socket.off('incomming-audio-call')
     };
-  }, [socket, myProfile, setnewMessages]);
+
+  }, [socket, myProfile, setnewMessages, navigator]);
 
   const handleLeaveChatRoom = () => {
         socket.emit('leave-room', roomId);
@@ -341,6 +346,13 @@ const Chat_UI = () => {
       }
     };
 
+    const Calling_User = (roomId : string, callerId : string) => {
+
+        socket.emit('audio-call-invite', roomId, callerId);
+
+        setTimeout( () => navigator(`/active-audio-call?roomId=${roomId}&Called-User-Id=${Other_UserData?.user_publicId}`), 1000);
+    };
+
   // (listener moved to useEffect to prevent duplicate registrations)
   return (<div id={roomId as string} className="h-full w-full relative ">
         <div className="border-b border-gray-400 flex justify- items-center gap-1 py-3 px-2">
@@ -366,7 +378,11 @@ const Chat_UI = () => {
                 </div>
             </div>
             <div className="flex w-1/5 justify-center items-center gap-4 lg:gap-6 mr-2">     
-                    <div className="hover:cursor-pointer"><Phone strokeWidth={1.25} /></div>
+                    <div 
+                      onClick={() => {
+                        Calling_User(roomId!, myProfile!.message.data.public_Id!)
+                      }}
+                       className="hover:cursor-pointer"><Phone strokeWidth={1.25} /></div>
                     <div className="hover:cursor-pointer"><Video strokeWidth={1.25} size={28}/></div>
             </div>
         </div>

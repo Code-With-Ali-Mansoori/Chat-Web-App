@@ -1,0 +1,304 @@
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Mic, MicOff, PhoneOff } from "lucide-react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import useOtherUser from "../Hooks/useOtherUser";
+import { useSocket } from "../Hooks/Sockets";
+import useProfile_Hooks from "../Hooks/Profile.Hook";
+
+export default function AudioCallUI() {
+  const [isMuted, setIsMuted] = useState(false);
+  const [seconds, setSeconds] = useState(0);
+  const [isOtherMuted, setIsOtherMuted] = useState<boolean>(false);
+  const [isCall_Start, setIsCall_Start] = useState<boolean>(false);
+
+  const socket = useSocket();
+
+  const navigators =  useNavigate();
+  const [searchParams] = useSearchParams();
+  const user_Id = searchParams.get("Called-User-Id") as string;
+  const roomId = searchParams.get("roomId") as string;
+    
+  const { data : Other_UserData } = useOtherUser(user_Id);
+  const { data : myProfile } = useProfile_Hooks();
+
+  const intervalRef = useRef<number | null>(null);
+  const pcRef = useRef<RTCPeerConnection | null>(null);
+  const isOfferSetRef = useRef(false);
+  const localStreamRef = useRef<MediaStream | null>(null);
+
+  // End the Call pe dono user WebRTC connection close ho jay aur mic/camera bhi! = Remaining Feature
+  const hanlde_WebRTC_Connection = () => {
+      const peer = new RTCPeerConnection({
+        iceServers: [{ urls: "stun:stun.l.google.com:19302" }]
+      });
+
+      return peer;  
+  };
+
+  const createPC = useCallback(async () => {
+  if (!pcRef.current) {
+    const pc = hanlde_WebRTC_Connection()
+
+    // 🎤 Get mic access
+    const stream = await navigator.mediaDevices.getUserMedia({
+      audio: true,
+      video: false,
+    });
+
+    // 🎧 Add tracks to connection
+    stream.getTracks().forEach((track) => {
+      pc.addTrack(track, stream);
+    });
+
+    // 🔊 Receive remote audio
+    pc.ontrack = (event) => {
+      const remoteAudio = new Audio();
+      remoteAudio.srcObject = event.streams[0];
+      remoteAudio.play();
+    };
+
+    // ❄️ ICE => 2 users ke beech best possible network path find karna
+    pc.onicecandidate = (event) => {
+      if (event.candidate) {
+        socket.emit("ice-candidate", event.candidate, roomId);
+      }
+    };
+
+    localStreamRef.current = stream;
+    pcRef.current = pc;
+  }
+
+  return pcRef.current;
+  }, [roomId, socket]);
+
+  const handle_Reject_AudioCall = useCallback((roomId: string, otherUserId: string) => {
+    navigators(`/chat-room?roomId=${roomId}&otherUser-public_Id=${otherUserId}`);
+  }, [navigators]);
+
+  const handle_End_AudioCall = useCallback((roomId: string) => {
+    setIsCall_Start(false);
+    isOfferSetRef.current = false;
+    
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    };
+
+    localStreamRef.current?.getTracks().forEach(track => track.stop()); //Closing Mic
+    pcRef.current?.close(); //Closing WebRTC connection
+ 
+    console.log('End Audio Call');
+  
+    navigators(`/chat-room?roomId=${roomId}&otherUser-public_Id=${Other_UserData?.user_publicId}`);
+  }, [navigators, Other_UserData?.user_publicId]);
+
+
+  //Callee Accept the Call, Caller will get event and he will create Offer as well as Sending to Callee
+  const handle_Accpeted_AudioCall = useCallback(async (roomId: string, reciverId: string) => {
+    setIsCall_Start(true);
+
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+    }
+    intervalRef.current = setInterval(() => {
+      setSeconds((prev) => prev + 1);
+    }, 1000);
+
+    const Pc = await createPC(); //TURN Server Req For Connection
+
+    if (reciverId !== myProfile?.message.data.public_Id) {
+      const offer = await Pc.createOffer(); //Create SDP offer
+      await Pc.setLocalDescription(offer); // Store Offer Locally
+
+      isOfferSetRef.current = true; // ✅ mark ready
+      socket.emit('audio-call-offer', offer, roomId); //Signaling and Send offer to Callee
+    }
+  }, [myProfile?.message.data.public_Id, createPC, socket]);
+
+
+  //Callee will get the offer and here sends Answer to Caller 
+  const handle_Offer_AudioCall = useCallback(async (offer: RTCSessionDescriptionInit, roomId: string) => {
+    const pc = await createPC(); // Using same WebRTC connection
+    await pc.setRemoteDescription(new RTCSessionDescription(offer)); // Store Caller Offer Remotely
+
+    const answer = await pc.createAnswer(); // Create Answer
+    await pc.setLocalDescription(answer); // Store Remotely
+
+    socket.emit("answer-audio-call", answer, roomId); //Signaling and Sharing with Caller
+  }, [createPC, socket]);
+
+
+  //Caller will listen and store answer, also signalling for Acknowledgement
+  const hanlde_Answered_AudioCall = useCallback(async (answer: RTCSessionDescriptionInit, roomId: string) => {
+    const pc = pcRef.current;
+    if (!pc) return;
+
+    // ❗ Wait until offer is set
+    if (!isOfferSetRef.current) {
+      console.warn("Offer not ready yet, delaying answer...");
+      setTimeout(() => {
+        socket.emit("answer-audio-call", answer, roomId);
+        console.log('Again Signalling...');
+      }, 100);
+      return;
+    }
+
+    await pc.setRemoteDescription(new RTCSessionDescription(answer)); // Store Callee Answer Remotely
+    socket.emit('Audio-call-Connected', roomId);
+  }, [socket]);
+
+  // Socket listeners setup - only depends on stable values
+  useEffect(() => {
+    socket.emit('join-room', roomId);
+    socket.on('reject-audio-called', handle_Reject_AudioCall);
+    socket.on('end-audio-called', handle_End_AudioCall);
+    socket.on('audio-call-accepted', handle_Accpeted_AudioCall);
+    socket.on('Offer-audio-call', handle_Offer_AudioCall);
+    socket.on('answered-audio-call', hanlde_Answered_AudioCall);
+
+    socket.on('connected-audio-call', () => {
+      console.log('Audio Call Happening...'); 
+    });
+
+    socket.on("ice-candidate2", async (candidate) => {
+        if (pcRef.current && candidate) {
+        await pcRef.current.addIceCandidate(candidate)}
+    });
+
+    socket.on('muted-audio', () => {
+        setIsOtherMuted(true);
+    });
+
+    socket.on('unmuted-audio', () => {
+        setIsOtherMuted(false);
+    });
+
+    return () => {
+      socket.off('reject-audio-called', handle_Reject_AudioCall);
+      socket.off('end-audio-called', handle_End_AudioCall);
+      socket.off('audio-call-accepted', handle_Accpeted_AudioCall);
+      socket.off('Offer-audio-call', handle_Offer_AudioCall);
+      socket.off('answered-audio-call', hanlde_Answered_AudioCall);
+      socket.off('Audio-call-Connected');
+      socket.off('muted-audio');
+      socket.off('unmuted-audio');
+      socket.off('ice-candidate2');
+      socket.off('connected-audio-call')
+    };
+  }, [socket, roomId, handle_Reject_AudioCall, handle_End_AudioCall, handle_Accpeted_AudioCall, handle_Offer_AudioCall, hanlde_Answered_AudioCall]);
+
+  // Cleanup interval on unmount
+  useEffect(() => {
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+    };
+  }, []);
+
+  const Handle_End_Audio_Call = (roomId : string ) => {
+      socket.emit('end-audio-call', roomId , myProfile?.message.data.public_Id ); //Call Ender Id
+      // navigators(`/chat-room?roomId=${roomId}&otherUser-public_Id=${user_Id}`)
+  };
+
+  const handle_Mute = () => {
+
+    const newMuted = !isMuted; 
+    setIsMuted(newMuted);
+
+    if (newMuted === true) {
+      localStreamRef.current?.getAudioTracks().forEach(track => {
+        track.enabled = false; // MUTE
+      });
+
+      socket.emit('audio-call-mute', roomId, myProfile?.message.data.public_Id);
+
+    } else {
+      localStreamRef.current?.getAudioTracks().forEach(track => {
+        track.enabled = true; // UNMUTE
+      });
+
+      socket.emit('audio-call-unmute', roomId, myProfile?.message.data.public_Id);
+    }
+  };
+
+  const formatTime = (sec: number) => {
+    const mins = Math.floor(sec / 60);
+    const secs = sec % 60;
+    return `${mins}:${secs < 10 ? "0" : ""}${secs}`;
+  };
+
+  return (
+    <div className="h-screen w-full bg-[#242323] flex flex-col justify-between text-white overflow-hidden">
+
+      {/* 🔵 MAIN */}
+      <div className="flex flex-col items-center justify-center flex-1 gap-4">
+
+        {/* Avatar */}
+        <div className="
+  w-24 h-24 
+  sm:w-32 sm:h-32 
+  md:w-40 md:h-40 
+  rounded-full 
+  border-2
+  overflow-hidden
+">
+  <img
+    src={Other_UserData?.userAvatar}
+    alt="avatar"
+    className="w-full h-full object-cover"
+  />
+</div>
+
+        {/* Name */}
+        <h2 className="text-sm sm:text-base md:text-lg font-semibold">
+          {Other_UserData?.username}
+        </h2>
+
+        {/* Timer And Call Status*/}
+        <p className="text-xs sm:text-sm text-gray-300">
+          {isCall_Start ? formatTime(seconds) : Other_UserData?.active_status ? 'Ringing...' : 'Calling...'}
+        </p>
+
+        {/* Mute Indicator */}
+        {isOtherMuted && (
+          <div>
+            <p className="text-xs sm:text-sm text-gray-400">
+              🔇 Muted
+            </p>
+          </div>
+        )}
+
+      </div>
+
+      {/* ⚫ FOOTER */}
+      <div className="bg-gray-300 py-5 sm:py-5 flex justify-center items-center gap-4 sm:gap-6 md:gap-8 ">
+
+        {/* 🎙️ Mute */}
+        <button
+          onClick={handle_Mute}
+          className={`p-3 sm:p-4 rounded-full ${
+            isMuted ? "bg-red-500" : "bg-gray-700"
+          }`}
+        >
+          {isMuted ? <MicOff size={18} /> : <Mic size={18} />}
+        </button>
+
+        {/* 🔊 Speaker
+        <button
+          onClick={() => setIsSpeakerOn(!isSpeakerOn)}
+          className={`p-3 sm:p-4 rounded-full ${
+            !isSpeakerOn ? "bg-red-500" : "bg-gray-700"
+          }`}
+        >
+          {isSpeakerOn ? <Volume2 size={18} /> : <VolumeX size={18} />}
+        </button> */}
+
+        {/* 🔴 End Call */}
+        <button onClick={() => Handle_End_Audio_Call(roomId as string)} className="p-3 sm:p-4 rounded-full bg-red-600 hover:bg-red-700">
+          <PhoneOff size={18} />
+        </button>
+      </div>
+    </div>
+  );
+}
