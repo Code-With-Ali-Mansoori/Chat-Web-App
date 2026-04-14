@@ -35,6 +35,8 @@ export default function VideoCallUI() {
   }, []);
 
   const intervalRef = useRef<number | null>(null);
+  const callEndTimeoutRef = useRef<number | null>(null);
+  const isCallStartRef = useRef<boolean>(false);
 
   const pcRef = useRef<RTCPeerConnection | null>(null);
   const isOfferSetRef = useRef(false);
@@ -115,7 +117,19 @@ export default function VideoCallUI() {
       navigators(`/chat-room?roomId=${roomId}&otherUser-public_Id=${otherUserId}`);
   }, [navigators]);
 
+  useEffect(() => {
+    isCallStartRef.current = isCall_Start;
+  }, [isCall_Start]);
+
+  const clearCallEndTimeout = useCallback(() => {
+    if (callEndTimeoutRef.current !== null) {
+      clearTimeout(callEndTimeoutRef.current);
+      callEndTimeoutRef.current = null;
+    }
+  }, []);
+
   const handle_Accpeted_VideoCall = useCallback(async (roomId: string, reciverId: string) => {
+    clearCallEndTimeout();
     setIsCall_Start(true);
 
     if (intervalRef.current) {
@@ -135,10 +149,11 @@ export default function VideoCallUI() {
       isOfferSetRef.current = true;
       socket.emit('video-call-offer', offer, roomId);
     }
-  }, [myProfile?.message.data.public_Id, createPC, socket]);
+  }, [myProfile?.message.data.public_Id, createPC, socket, clearCallEndTimeout]);
 
 
   const handle_End_VideoCall = useCallback((roomId: string) => {
+    clearCallEndTimeout();
     setIsCall_Start(false);
     isOfferSetRef.current = false;
     
@@ -155,7 +170,7 @@ export default function VideoCallUI() {
     console.log('End Video Call');
   
     navigators(`/chat-room?roomId=${roomId}&otherUser-public_Id=${Other_UserData?.user_publicId}`);
-  }, [navigators, Other_UserData?.user_publicId]);
+  }, [navigators, Other_UserData?.user_publicId, clearCallEndTimeout]);
 
 
   const handle_Offer_VideoCall = useCallback(async (offer: RTCSessionDescriptionInit, roomId: string) => {
@@ -194,8 +209,27 @@ export default function VideoCallUI() {
     
   }, [Other_UserData?.user_publicId, navigators, roomId, socket])
 
+  const handle_CallENDUp_Timer = useCallback((roomId : string) => {
+    clearCallEndTimeout();
+
+    if (!isCallStartRef.current) {
+      callEndTimeoutRef.current = window.setTimeout(() => {
+        if (!isCallStartRef.current) {
+          console.log('Call Cut!');
+          socket.emit('VideoCall-not-reached', roomId);
+          navigators(`/chat-room?roomId=${roomId}&otherUser-public_Id=${Other_UserData?.user_publicId}`);
+        }
+      }, 10000);
+    } else {
+      console.log('Continue the call!');
+    }
+  }, [navigators, Other_UserData?.user_publicId, socket, clearCallEndTimeout]);
+
   // Socket listeners setup - only depends on stable values
   useEffect(() => {
+
+    handle_CallENDUp_Timer(roomId);
+
     socket.emit('join-room', roomId);
     socket.on('reject-video-called', handle_Reject_VideoCall);
     socket.on('end-video-called', handle_End_VideoCall);
@@ -224,6 +258,7 @@ export default function VideoCallUI() {
     socket.on('disconnect-the-call', hanlde_Disconnect_Call);
 
     return () => {
+      clearCallEndTimeout();
       socket.off('reject-video-called', handle_Reject_VideoCall);
       socket.off('end-video-called', handle_End_VideoCall);
       socket.off('video-call-accepted', handle_Accpeted_VideoCall);
@@ -235,7 +270,7 @@ export default function VideoCallUI() {
       socket.off('unmuted-audio');
       socket.off('connected-video-call')
     };
-  }, [handle_Reject_VideoCall, roomId, socket, handle_Accpeted_VideoCall, handle_End_VideoCall, handle_Offer_VideoCall, hanlde_Answered_VideoCall, hanlde_Disconnect_Call]);
+  }, [handle_Reject_VideoCall, roomId, socket, handle_Accpeted_VideoCall, handle_End_VideoCall, handle_Offer_VideoCall, hanlde_Answered_VideoCall, hanlde_Disconnect_Call, handle_CallENDUp_Timer, clearCallEndTimeout]);
 
   const formatTime = (sec: number) => {
     const mins = Math.floor(sec / 60);
@@ -288,7 +323,7 @@ export default function VideoCallUI() {
 
         <div className="flex justify-center items-center gap-2 md:gap-3">
           <div className="h-8 w-8 md:h-10 md:w-10 mt-1">
-            <img className="rounded-full" src={Other_UserData?.userAvatar} alt="user_avatar" />
+            <img className="rounded-full" src={Other_UserData?.user_avatar} alt="user_avatar" />
           </div>
 
           <div>

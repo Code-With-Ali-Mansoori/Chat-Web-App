@@ -103,6 +103,10 @@ io.on("connection", (socket) => {
         io.to(roomId).emit('unmuted-audio')
     });
 
+    socket.on('AudioCall-not-reached', (roomId) => {
+        socket.to(roomId).emit('AudioCall-not-reached', roomId);
+    })
+
     //10. Video Call - WebRTC 
     socket.on('video-call-invite', (room_id, callerId) => {
         socket.to(room_id).emit('incomming-video-call', room_id, callerId); 
@@ -150,6 +154,10 @@ io.on("connection", (socket) => {
     socket.on('disconnect-the-call', (roomId) => {
         socket.to(roomId).emit('disconnect-the-call');
     });
+
+    socket.on('VideoCall-not-reached', (roomId) => {
+        socket.to(roomId).emit('VideoCall-not-reached', roomId);
+    })
          
     //8. Disconnect Socket
     socket.on("disconnect", () => disconnect_socket(socket));

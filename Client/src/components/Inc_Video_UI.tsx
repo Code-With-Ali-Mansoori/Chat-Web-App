@@ -38,10 +38,16 @@ export default function IncomingVideoCall() {
         });
 
         socket.on('disconnect-the-call', hanlde_Disconnect_Call);
+
+        socket.on('VideoCall-not-reached', (roomId) => {
+           console.log('You have missed the call!');
+           navigators(`/chat-room?roomId=${roomId}&otherUser-public_Id=${Other_UserData.user_publicId}`);
+        });
     
         return () => {
           socket.off('end-video-called');
           socket.off('disconnect-the-call', hanlde_Disconnect_Call);
+          socket.off('VideoCall-not-reached');
         };
     
   }, [navigators, socket, roomId, Other_UserData?.user_publicId, hanlde_Disconnect_Call]);

@@ -14,9 +14,30 @@ import IncomingAudioCall from './components/Inc_Audio_UI';
 import IncomingVideoCall from './components/Inc_Video_UI';
 import AudioCallUI from './components/Ac_Audio_Call_UI';
 import VideoCallUI from './components/Ac_Video_Call_UI';
+// import { useEffect } from 'react';
+// import { useSocket } from './Hooks/Sockets';
 
 const App = () => {
+
+  // const navigator = useNavigate();
+  // const socket = useSocket();
+
+  // useEffect(() => {
+  //   socket.on('incomming-audio-call', (room_id, callerId) => {
+  //       navigator(`/incoming-audio-call/?roomId=${room_id}&Caller-User-Id=${callerId}`)
+  //   });
+
+  //   socket.on('incomming-video-call', (room_id, callerId) => {
+  //       navigator(`/incoming-video-call/?roomId=${room_id}&Caller-User-Id=${callerId}`);
+  //   });
   
+  //   return () => {
+  //     socket.off('incomming-audio-call');
+  //     socket.off('incomming-video-call')
+  //   }
+  // }, [socket, navigator]);
+  
+
   return (
     <div className='h-screen relative'>
 

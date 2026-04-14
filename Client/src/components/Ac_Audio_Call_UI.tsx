@@ -24,6 +24,8 @@ export default function AudioCallUI() {
   const { data : myProfile } = useProfile_Hooks();
 
   const intervalRef = useRef<number | null>(null);
+  const callEndTimeoutRef = useRef<number | null>(null);
+  const isCallStartRef = useRef<boolean>(false);
   const pcRef = useRef<RTCPeerConnection | null>(null);
   const isOfferSetRef = useRef(false);
   const localStreamRef = useRef<MediaStream | null>(null);
@@ -73,11 +75,23 @@ export default function AudioCallUI() {
   return pcRef.current;
   }, [roomId, socket]);
 
+  useEffect(() => {
+    isCallStartRef.current = isCall_Start;
+  }, [isCall_Start]);
+
+  const clearCallEndTimeout = useCallback(() => {
+    if (callEndTimeoutRef.current !== null) {
+      clearTimeout(callEndTimeoutRef.current);
+      callEndTimeoutRef.current = null;
+    }
+  }, []);
+
   const handle_Reject_AudioCall = useCallback((roomId: string, otherUserId: string) => {
     navigators(`/chat-room?roomId=${roomId}&otherUser-public_Id=${otherUserId}`);
   }, [navigators]);
 
   const handle_End_AudioCall = useCallback((roomId: string) => {
+    clearCallEndTimeout();
     setIsCall_Start(false);
     isOfferSetRef.current = false;
     
@@ -92,11 +106,12 @@ export default function AudioCallUI() {
     console.log('End Audio Call');
   
     navigators(`/chat-room?roomId=${roomId}&otherUser-public_Id=${Other_UserData?.user_publicId}`);
-  }, [navigators, Other_UserData?.user_publicId]);
+  }, [navigators, Other_UserData?.user_publicId, clearCallEndTimeout]);
 
 
   //Callee Accept the Call, Caller will get event and he will create Offer as well as Sending to Callee
   const handle_Accpeted_AudioCall = useCallback(async (roomId: string, reciverId: string) => {
+    clearCallEndTimeout();
     setIsCall_Start(true);
 
     if (intervalRef.current) {
@@ -115,7 +130,7 @@ export default function AudioCallUI() {
       isOfferSetRef.current = true; // ✅ mark ready
       socket.emit('audio-call-offer', offer, roomId); //Signaling and Send offer to Callee
     }
-  }, [myProfile?.message.data.public_Id, createPC, socket]);
+  }, [myProfile?.message.data.public_Id, createPC, socket, clearCallEndTimeout]);
 
 
   //Callee will get the offer and here sends Answer to Caller 
@@ -160,8 +175,25 @@ export default function AudioCallUI() {
       
     }, [Other_UserData?.user_publicId, navigators, roomId, socket]);
 
+    const handle_CallENDUp_Timer = useCallback((roomId : string) => {
+      clearCallEndTimeout();
+
+      if (!isCallStartRef.current) {
+        callEndTimeoutRef.current = window.setTimeout(() => {
+          if (!isCallStartRef.current) {
+            console.log('Call Cut!');
+            socket.emit('AudioCall-not-reached', roomId);
+            navigators(`/chat-room?roomId=${roomId}&otherUser-public_Id=${Other_UserData?.user_publicId}`);
+          }
+        }, 10000);
+      }
+    }, [navigators, Other_UserData?.user_publicId, socket, clearCallEndTimeout]);
+
   // Socket listeners setup - only depends on stable values
   useEffect(() => {
+
+    handle_CallENDUp_Timer(roomId)
+
     socket.emit('join-room', roomId);
     socket.on('reject-audio-called', handle_Reject_AudioCall);
     socket.on('end-audio-called', handle_End_AudioCall);
@@ -189,6 +221,7 @@ export default function AudioCallUI() {
     socket.on('disconnect-the-call', hanlde_Disconnect_Call);
 
     return () => {
+      clearCallEndTimeout();
       socket.off('reject-audio-called', handle_Reject_AudioCall);
       socket.off('end-audio-called', handle_End_AudioCall);
       socket.off('audio-call-accepted', handle_Accpeted_AudioCall);
@@ -201,7 +234,7 @@ export default function AudioCallUI() {
       socket.off('connected-audio-call');
       socket.off('disconnect-the-call', hanlde_Disconnect_Call);
     };
-  }, [socket, roomId, handle_Reject_AudioCall, handle_End_AudioCall, handle_Accpeted_AudioCall, handle_Offer_AudioCall, hanlde_Answered_AudioCall, hanlde_Disconnect_Call]);
+  }, [socket, roomId, handle_Reject_AudioCall, handle_End_AudioCall, handle_Accpeted_AudioCall, handle_Offer_AudioCall, hanlde_Answered_AudioCall, hanlde_Disconnect_Call, handle_CallENDUp_Timer, clearCallEndTimeout]);
 
   // Cleanup interval on unmount
   useEffect(() => {

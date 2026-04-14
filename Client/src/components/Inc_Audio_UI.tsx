@@ -51,10 +51,16 @@ export default function IncomingAudioCall() {
       });
 
       socket.on('disconnect-the-call', hanlde_Disconnect_Call);
+
+      socket.on('AudioCall-not-reached', (roomId) => {
+           console.log('You have missed the call!');
+           navigators(`/chat-room?roomId=${roomId}&otherUser-public_Id=${Other_UserData.user_publicId}`);
+        });
   
       return () => {
         socket.off('end-audio-called');
         socket.off('disconnect-the-call', hanlde_Disconnect_Call);
+        socket.off('AudioCall-not-reached');
       };
   
     }, [navigators, socket, roomId, Other_UserData?.user_publicId, hanlde_Disconnect_Call]);

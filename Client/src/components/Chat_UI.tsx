@@ -213,7 +213,8 @@ const Chat_UI = () => {
       socket.off('update_seen');
       socket.off('update_seen_many');
       socket.off('receive-media');
-      socket.off('incomming-audio-call')
+      socket.off('incomming-audio-call');
+      socket.off('incomming-video-call')
     };
 
   }, [socket, myProfile, setnewMessages, navigator]);
@@ -469,7 +470,11 @@ const Chat_UI = () => {
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 "></div>
                   Uploading...
                 </div>
-              </div>)}        
+              </div>)}    
+
+              {/* <div className="flex justify-center items-center my-3">
+                <small className="text-red-400">You have missed the call</small>  
+              </div>     */}
         </div>
 
         
