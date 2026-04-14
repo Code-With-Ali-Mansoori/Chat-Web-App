@@ -3,12 +3,13 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import useOtherUser from "../Hooks/useOtherUser";
 import { useSocket } from "../Hooks/Sockets";
 import useProfile_Hooks from "../Hooks/Profile.Hook";
-import { useEffect } from "react";
+import { useCallback, useEffect } from "react";
+import { useUnloadWarning } from "../Hooks/useUnloadWarning";
 
 export default function IncomingAudioCall() {
 
   const socket = useSocket();
-  const navigator =  useNavigate();
+  const navigators =  useNavigate();
 
   const [searchParams] = useSearchParams();
   const roomId = searchParams.get("roomId");
@@ -17,30 +18,46 @@ export default function IncomingAudioCall() {
   const { data : Other_UserData } = useOtherUser(user_Id as string);
   const { data : myProfile } = useProfile_Hooks();
   
+  useUnloadWarning();
+
   const handle_Reject_Call = (roomId : string , user_Id : string) => {
       socket.emit('reject-audio-call', roomId , myProfile?.message.data.public_Id );
-      navigator(`/chat-room?roomId=${roomId}&otherUser-public_Id=${user_Id}`); //Other_Id 
+      navigators(`/chat-room?roomId=${roomId}&otherUser-public_Id=${user_Id}`); //Other_Id 
   };
 
   const handle_Accept_Call = ( roomId : string , user_Id : string ) => {
       setTimeout(() => {
           socket.emit('accept-audio-call', roomId , myProfile?.message.data.public_Id ); //MineId 
       }, 100);
-      navigator(`/active-audio-call?roomId=${roomId}&Called-User-Id=${user_Id}`); //OtherUser
+      navigators(`/active-audio-call?roomId=${roomId}&Called-User-Id=${user_Id}`); //OtherUser
   };
+
+  const hanlde_Disconnect_Call = useCallback(() => {
+        
+    alert('⚠️ Network has Interupted');
+      
+    setTimeout(() => {
+      navigators(`/chat-room?roomId=${roomId}&otherUser-public_Id=${Other_UserData?.user_publicId}`);
+      socket.emit('disconnect-the-call', roomId);
+    }, 2000);
+        
+    }, [Other_UserData?.user_publicId, navigators, roomId, socket]);
 
   useEffect(() => {
       socket.emit('join-room', roomId);
   
       socket.on('end-audio-called', ( roomId : string ) => {      
-        navigator(`/chat-room?roomId=${roomId}&otherUser-public_Id=${Other_UserData.user_publicId}`);
+        navigators(`/chat-room?roomId=${roomId}&otherUser-public_Id=${Other_UserData?.user_publicId}`);
       });
+
+      socket.on('disconnect-the-call', hanlde_Disconnect_Call);
   
       return () => {
         socket.off('end-audio-called');
+        socket.off('disconnect-the-call', hanlde_Disconnect_Call);
       };
   
-    }, [navigator, socket, roomId, Other_UserData.user_publicId]);
+    }, [navigators, socket, roomId, Other_UserData?.user_publicId, hanlde_Disconnect_Call]);
 
   return (
     <div className="h-screen w-full bg-[#242323] flex flex-col justify-between text-white overflow-hidden">
@@ -79,12 +96,12 @@ export default function IncomingAudioCall() {
       <div className="bg-gray-300 py-5 flex justify-center items-center gap-10 ">
 
         {/* ❌ Decline */}
-        <button onClick={() => handle_Reject_Call(roomId as string, Other_UserData.user_publicId as string)} className="p-5 rounded-full bg-red-600 hover:bg-red-700">
+        <button onClick={() => handle_Reject_Call(roomId as string, Other_UserData?.user_publicId as string)} className="p-5 rounded-full bg-red-600 hover:bg-red-700">
           <PhoneOff size={22} />
         </button>
 
         {/* ✅ Accept */}
-        <button onClick={() => handle_Accept_Call(roomId as string, Other_UserData.user_publicId as string)} className="p-5 rounded-full bg-green-600 hover:bg-green-700">
+        <button onClick={() => handle_Accept_Call(roomId as string, Other_UserData?.user_publicId as string)} className="p-5 rounded-full bg-green-600 hover:bg-green-700">
           <Phone size={22} />
         </button>
       </div>

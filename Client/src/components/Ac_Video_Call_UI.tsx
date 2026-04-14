@@ -1,19 +1,241 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Mic, MicOff, Video, VideoOff, PhoneOff } from "lucide-react";
+import { useSocket } from "../Hooks/Sockets";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import useOtherUser from "../Hooks/useOtherUser";
+import useProfile_Hooks from "../Hooks/Profile.Hook";
+import { IoMdMicOff } from "react-icons/io";  
+import { useUnloadWarning } from "../Hooks/useUnloadWarning";
 
 export default function VideoCallUI() {
   const [isMuted, setIsMuted] = useState(false);
   const [isCameraOn, setIsCameraOn] = useState(true);
+  const [isCall_Start, setIsCall_Start] = useState<boolean>(false);
   const [seconds, setSeconds] = useState(0);
+  const [isOtherMuted, setIsOtherMuted] = useState<boolean>(false);
+
+  const socket = useSocket();
+  useUnloadWarning();
+
+  const navigators =  useNavigate();
+  const [searchParams] = useSearchParams();
+  const user_Id = searchParams.get("Called-User-Id") as string;
+  const roomId = searchParams.get("roomId") as string;
+    
+  const { data : Other_UserData } = useOtherUser(user_Id);
+  const { data : myProfile } = useProfile_Hooks();
 
   // ⏱️ Timer
   useEffect(() => {
-    const interval = setInterval(() => {
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+    };
+  }, []);
+
+  const intervalRef = useRef<number | null>(null);
+
+  const pcRef = useRef<RTCPeerConnection | null>(null);
+  const isOfferSetRef = useRef(false);
+
+  const localStreamRef = useRef<MediaStream | null>(null);
+  const localVideoRef = useRef<HTMLVideoElement>(null);
+  const RemoteVideoRef = useRef<HTMLVideoElement>(null);
+  
+  const hanlde_WebRTC_Connection = () => {
+        const peer = new RTCPeerConnection({
+          iceServers: [
+            { urls: "stun:stun.l.google.com:19302" },
+            { urls: "stun:stun1.l.google.com:19302" },
+            { urls: "stun:stun2.l.google.com:19302" },
+            {
+              urls: "turn:openrelay.metered.ca:80",
+              username: "openrelayproject",
+              credential: "openrelayproject"
+            }
+          ]
+        });
+  
+        return peer;  
+  };
+  
+  const createPC = useCallback(async () => {
+    if (!pcRef.current) {
+      const pc = hanlde_WebRTC_Connection();
+
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          audio: true,
+          video: true,
+        });
+
+        localStreamRef.current = stream;
+        if (localVideoRef.current) {
+          localVideoRef.current.srcObject = stream;
+        }
+
+        stream.getTracks().forEach((track) => {
+          pc.addTrack(track, stream);
+        });
+
+        pc.ontrack = (event) => {
+          const remoteStream = event.streams[0];
+          // console.log('Remote stream received:', remoteStream);
+          
+          if (RemoteVideoRef.current) {
+            RemoteVideoRef.current.srcObject = remoteStream;
+          }
+        };
+
+        pc.onicecandidate = (event) => {
+          if (event.candidate) {
+            socket.emit("ice-candidate-video", event.candidate, roomId);
+          }
+        };
+
+        // pc.onconnectionstatechange = () => {
+        //   console.log('Connection state:', pc.connectionState);
+        // };
+
+        pcRef.current = pc;
+
+      } catch (error) {
+        console.error("Error accessing media devices:", error);
+        alert("Unable to access camera or microphone. Please check permissions.");
+        return null;
+      }
+    }
+
+    return pcRef.current;
+  }, [roomId, socket]);
+
+
+  const handle_Reject_VideoCall = useCallback((roomId: string, otherUserId: string) => {
+      navigators(`/chat-room?roomId=${roomId}&otherUser-public_Id=${otherUserId}`);
+  }, [navigators]);
+
+  const handle_Accpeted_VideoCall = useCallback(async (roomId: string, reciverId: string) => {
+    setIsCall_Start(true);
+
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+    }
+
+    intervalRef.current = setInterval(() => {
       setSeconds((prev) => prev + 1);
     }, 1000);
 
-    return () => clearInterval(interval);
-  }, []);
+    const pc = await createPC();
+
+    if (pc && reciverId !== myProfile?.message.data.public_Id) {
+      const offer = await pc.createOffer();
+      await pc.setLocalDescription(offer);
+
+      isOfferSetRef.current = true;
+      socket.emit('video-call-offer', offer, roomId);
+    }
+  }, [myProfile?.message.data.public_Id, createPC, socket]);
+
+
+  const handle_End_VideoCall = useCallback((roomId: string) => {
+    setIsCall_Start(false);
+    isOfferSetRef.current = false;
+    
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    };
+
+    localStreamRef.current?.getTracks().forEach(track => track.stop());
+    pcRef.current?.close();
+    pcRef.current = null;
+    localStreamRef.current = null;
+ 
+    console.log('End Video Call');
+  
+    navigators(`/chat-room?roomId=${roomId}&otherUser-public_Id=${Other_UserData?.user_publicId}`);
+  }, [navigators, Other_UserData?.user_publicId]);
+
+
+  const handle_Offer_VideoCall = useCallback(async (offer: RTCSessionDescriptionInit, roomId: string) => {
+    const pc = await createPC();
+    if (!pc) return;
+    await pc.setRemoteDescription(new RTCSessionDescription(offer));
+
+    const answer = await pc.createAnswer();
+    await pc.setLocalDescription(answer);
+
+    socket.emit("answer-video-call", answer, roomId);
+  }, [createPC, socket]);
+
+
+  const hanlde_Answered_VideoCall = useCallback(async (answer: RTCSessionDescriptionInit, roomId: string) => {
+    const pc = pcRef.current;
+    if (!pc) return;
+
+    if (!isOfferSetRef.current) {
+      console.warn("Offer not set yet, cannot set answer. Waiting...");
+      return;
+    }
+
+    await pc.setRemoteDescription(new RTCSessionDescription(answer));
+    socket.emit('video-call-Connected', roomId);
+  }, [socket]);
+
+  const hanlde_Disconnect_Call = useCallback(() => {
+    
+    alert('⚠️ Network has Interupted');
+    
+    setTimeout(() => {
+        navigators(`/chat-room?roomId=${roomId}&otherUser-public_Id=${Other_UserData?.user_publicId}`);
+        socket.emit('disconnect-the-call', roomId); 
+    }, 2000);
+    
+  }, [Other_UserData?.user_publicId, navigators, roomId, socket])
+
+  // Socket listeners setup - only depends on stable values
+  useEffect(() => {
+    socket.emit('join-room', roomId);
+    socket.on('reject-video-called', handle_Reject_VideoCall);
+    socket.on('end-video-called', handle_End_VideoCall);
+    socket.on('video-call-accepted', handle_Accpeted_VideoCall);
+    socket.on('Offer-video-call', handle_Offer_VideoCall);
+    socket.on('answered-video-call', hanlde_Answered_VideoCall);
+
+    socket.on('connected-video-call', () => {
+      console.log('Video Call Happening...'); 
+    });
+
+    socket.on("ice-candidate-video", async (candidate) => {
+      if (pcRef.current && candidate) {
+        await pcRef.current.addIceCandidate(new RTCIceCandidate(candidate));
+      }
+    });
+
+    socket.on('muted-video', () => {
+        setIsOtherMuted(true);
+    });
+
+    socket.on('unmuted-video', () => {
+        setIsOtherMuted(false);
+    });
+
+    socket.on('disconnect-the-call', hanlde_Disconnect_Call);
+
+    return () => {
+      socket.off('reject-video-called', handle_Reject_VideoCall);
+      socket.off('end-video-called', handle_End_VideoCall);
+      socket.off('video-call-accepted', handle_Accpeted_VideoCall);
+      socket.off('Offer-video-call', handle_Offer_VideoCall);
+      socket.off('answered-video-call', hanlde_Answered_VideoCall);
+      socket.off('disconnect-the-call', hanlde_Disconnect_Call);
+      socket.off('ice-candidate-video');
+      socket.off('muted-audio');
+      socket.off('unmuted-audio');
+      socket.off('connected-video-call')
+    };
+  }, [handle_Reject_VideoCall, roomId, socket, handle_Accpeted_VideoCall, handle_End_VideoCall, handle_Offer_VideoCall, hanlde_Answered_VideoCall, hanlde_Disconnect_Call]);
 
   const formatTime = (sec: number) => {
     const mins = Math.floor(sec / 60);
@@ -21,33 +243,84 @@ export default function VideoCallUI() {
     return `${mins}:${secs < 10 ? "0" : ""}${secs}`;
   };
 
+  const Handle_End_Video_Call = (roomId : string ) => {
+      socket.emit('end-video-call', roomId , myProfile?.message.data.public_Id ); //Call Ender Id
+  };
+
+  const handle_Mute = () => {
+
+    const newMuted = !isMuted; 
+    setIsMuted(newMuted);
+
+    if (newMuted === true) {
+      localStreamRef.current?.getAudioTracks().forEach(track => {
+        track.enabled = false; // MUTE
+      });
+
+      socket.emit('video-call-mute', roomId);
+
+    } else {
+      localStreamRef.current?.getAudioTracks().forEach(track => {
+        track.enabled = true; // UNMUTE
+      });
+
+      socket.emit('video-call-unmute', roomId);
+    }
+  };
+
+  // const toggleMic = () => {
+  //   const newMuted = !isMuted;
+  //   setIsMuted(newMuted);
+  //   localStreamRef.current?.getAudioTracks().forEach(track => track.enabled = !newMuted);
+  // };
+
+  const toggleCamera = () => {
+    const newCameraOn = !isCameraOn;
+    setIsCameraOn(newCameraOn);
+    localStreamRef.current?.getVideoTracks().forEach(track => track.enabled = newCameraOn);
+  };
+
   return (
     <div className="h-screen w-full bg-[#2f3147] flex flex-col text-white overflow-hidden">
 
       {/* 🔷 HEADER */}
       <div className="flex items-center justify-between px-4 sm:px-6 py-3 bg-[#545454]">
-        <div>
-          <h2 className="text-sm sm:text-base md:text-lg font-semibold">
-            Name Surname
+
+        <div className="flex justify-center items-center gap-2 md:gap-3">
+          <div className="h-8 w-8 md:h-10 md:w-10 mt-1">
+            <img className="rounded-full" src={Other_UserData?.userAvatar} alt="user_avatar" />
+          </div>
+
+          <div>
+            <h2 className="text-sm sm:text-base md:text-lg font-semibold">
+            {Other_UserData?.username}
           </h2>
           <p className="text-xs text-gray-300">
-            {/* {formatTime(seconds)} */}
-            Calling
+           {isCall_Start ? formatTime(seconds) : Other_UserData?.active_status ? 'Ringing...' : 'Calling...'}
           </p>
+          {/* <p className="text-[10px] text-red-300 mt-1">
+            Reload karoge to video call disconnect ho jayega. Please use the End button.
+          </p> */}
+          </div>
+          
         </div>
 
-        <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+        <div className="flex justify-center items-center gap-6">
+          {isOtherMuted ? <IoMdMicOff /> : ''}
+          {/* <div className="flex justify-center items-center gap-1">
+            
+          </div> */}
+          
+          <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+        </div>
       </div>
 
       {/* 🎥 MAIN */}
       <div className="flex-1 relative">
 
         {/* 👤 REMOTE VIDEO */}
-        <div className="absolute inset-0 bg-gray-300 flex items-center justify-center">
-          {/* Replace with real video */}
-          <span className="text-gray-500 text-xs sm:text-sm">
-            Remote Video
-          </span>
+        <div className="absolute inset-0 flex items-center justify-center">
+          <video ref={RemoteVideoRef} autoPlay className="w-full h-full object-cover" />
         </div>
 
         {/* 🧍 SELF VIDEO */}
@@ -65,9 +338,7 @@ export default function VideoCallUI() {
           flex items-center justify-center
         ">
           {/* Replace with local video */}
-          <span className="text-[10px] sm:text-xs text-gray-400">
-            You
-          </span>
+          <video ref={localVideoRef} autoPlay className="w-full h-full object-cover rounded-lg" />
         </div>
       </div>
 
@@ -76,7 +347,7 @@ export default function VideoCallUI() {
 
         {/* 🎙️ Mute */}
         <button
-          onClick={() => setIsMuted(!isMuted)}
+          onClick={handle_Mute}
           className={`p-3 sm:p-4 rounded-full ${
             isMuted ? "bg-red-500" : "bg-gray-700"
           }`}
@@ -86,7 +357,7 @@ export default function VideoCallUI() {
 
         {/* 📷 Camera */}
         <button
-          onClick={() => setIsCameraOn(!isCameraOn)}
+          onClick={toggleCamera}
           className={`p-3 sm:p-4 rounded-full ${
             !isCameraOn ? "bg-red-500" : "bg-gray-700"
           }`}
@@ -95,7 +366,7 @@ export default function VideoCallUI() {
         </button>
 
         {/* 🔴 End */}
-        <button className="p-3 sm:p-4 rounded-full bg-red-600 hover:bg-red-700">
+        <button onClick={() => Handle_End_Video_Call(roomId as string)}  className="p-3 sm:p-4 rounded-full bg-red-600 hover:bg-red-700">
           <PhoneOff size={18} />
         </button>
       </div>

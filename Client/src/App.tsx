@@ -51,3 +51,6 @@ const App = () => {
 }
 
 export default App;
+
+//  1. Bug - Re-creating Room when we search user, 
+//  2. Protected Routing for Entire App ( Remaining.. )

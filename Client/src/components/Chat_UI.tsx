@@ -202,6 +202,10 @@ const Chat_UI = () => {
         navigator(`/incoming-audio-call/?roomId=${room_id}&Caller-User-Id=${callerId}`)
     });
 
+    socket.on('incomming-video-call', (room_id, callerId) => {
+        navigator(`/incoming-video-call/?roomId=${room_id}&Caller-User-Id=${callerId}`);
+    });
+
     return () => {
       socket.off('users-typing', handleUsersTyping);
       socket.off('stop-typinggggg', handleStopTyping);
@@ -346,11 +350,14 @@ const Chat_UI = () => {
       }
     };
 
-    const Calling_User = (roomId : string, callerId : string) => {
-
+    const Audio_Calling_User = (roomId : string, callerId : string) => {
         socket.emit('audio-call-invite', roomId, callerId);
-
         setTimeout( () => navigator(`/active-audio-call?roomId=${roomId}&Called-User-Id=${Other_UserData?.user_publicId}`), 1000);
+    };
+
+    const Video_Calling_User = (roomId : string, callerId : string) => {
+        socket.emit('video-call-invite', roomId, callerId);
+        setTimeout( () => navigator(`/active-video-call?roomId=${roomId}&Called-User-Id=${Other_UserData?.user_publicId}`), 1000);
     };
 
   // (listener moved to useEffect to prevent duplicate registrations)
@@ -380,10 +387,20 @@ const Chat_UI = () => {
             <div className="flex w-1/5 justify-center items-center gap-4 lg:gap-6 mr-2">     
                     <div 
                       onClick={() => {
-                        Calling_User(roomId!, myProfile!.message.data.public_Id!)
+                        Audio_Calling_User(roomId!, myProfile!.message.data.public_Id!)
                       }}
-                       className="hover:cursor-pointer"><Phone strokeWidth={1.25} /></div>
-                    <div className="hover:cursor-pointer"><Video strokeWidth={1.25} size={28}/></div>
+                       className="hover:cursor-pointer">
+                        <Phone strokeWidth={1.25} />
+                      </div>
+
+                    {/* Createing Video Call Feature */}
+                    <div
+                      onClick={() => {
+                        Video_Calling_User(roomId!, myProfile!.message.data.public_Id!)
+                      }}
+                      className="hover:cursor-pointer">
+                      <Video strokeWidth={1.25} size={28}/>
+                    </div>
             </div>
         </div>
 

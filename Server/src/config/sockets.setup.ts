@@ -102,6 +102,54 @@ io.on("connection", (socket) => {
         // console.log('Unmuted'); 
         io.to(roomId).emit('unmuted-audio')
     });
+
+    //10. Video Call - WebRTC 
+    socket.on('video-call-invite', (room_id, callerId) => {
+        socket.to(room_id).emit('incomming-video-call', room_id, callerId); 
+    });
+
+    socket.on('reject-video-call', (roomId, otherUserId) => {        
+        socket.to(roomId).emit('reject-video-called', roomId, otherUserId); 
+    });
+
+    socket.on('accept-video-call', (roomId, reciverId) => {
+        io.to(roomId).emit('video-call-accepted', roomId, reciverId);
+    });
+
+    socket.on('video-call-offer', (offer, roomId) => {
+        socket.to(roomId).emit('Offer-video-call', offer, roomId);
+    });
+
+    socket.on('answer-video-call', (answer, roomId) => {        
+        socket.to(roomId).emit("answered-video-call", answer, roomId );
+    });
+
+    socket.on('video-call-Connected', (roomId) => {
+        io.to(roomId).emit("connected-video-call");
+    });
+
+    socket.on('ice-candidate-video', (candidate, roomId) => {
+        socket.to(roomId).emit('ice-candidate-video', candidate);
+    });
+
+    socket.on('video-call-mute', (roomId) => {
+        console.log('Video Call Muted');  
+        io.to(roomId).emit('muted-video')
+    });
+
+    socket.on('video-call-unmute', (roomId) => {
+        console.log('Video Call Un-mute'); 
+        io.to(roomId).emit('unmuted-video')
+    });
+
+    socket.on('end-video-call', (roomId) => {        
+        io.to(roomId).emit('end-video-called', roomId); 
+    });
+
+    //Disconnecting the Call while Browser Refresh or tab changes
+    socket.on('disconnect-the-call', (roomId) => {
+        socket.to(roomId).emit('disconnect-the-call');
+    });
          
     //8. Disconnect Socket
     socket.on("disconnect", () => disconnect_socket(socket));

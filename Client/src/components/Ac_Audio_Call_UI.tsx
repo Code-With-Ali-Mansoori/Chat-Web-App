@@ -4,6 +4,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import useOtherUser from "../Hooks/useOtherUser";
 import { useSocket } from "../Hooks/Sockets";
 import useProfile_Hooks from "../Hooks/Profile.Hook";
+import { useUnloadWarning } from "../Hooks/useUnloadWarning";
 
 export default function AudioCallUI() {
   const [isMuted, setIsMuted] = useState(false);
@@ -12,6 +13,7 @@ export default function AudioCallUI() {
   const [isCall_Start, setIsCall_Start] = useState<boolean>(false);
 
   const socket = useSocket();
+  useUnloadWarning();
 
   const navigators =  useNavigate();
   const [searchParams] = useSearchParams();
@@ -147,6 +149,17 @@ export default function AudioCallUI() {
     socket.emit('Audio-call-Connected', roomId);
   }, [socket]);
 
+  const hanlde_Disconnect_Call = useCallback(() => {
+      
+      alert('⚠️ Network has Interupted');
+    
+      setTimeout(() => {
+          navigators(`/chat-room?roomId=${roomId}&otherUser-public_Id=${Other_UserData?.user_publicId}`);
+          socket.emit('disconnect-the-call', roomId);
+      }, 2000);
+      
+    }, [Other_UserData?.user_publicId, navigators, roomId, socket]);
+
   // Socket listeners setup - only depends on stable values
   useEffect(() => {
     socket.emit('join-room', roomId);
@@ -173,6 +186,8 @@ export default function AudioCallUI() {
         setIsOtherMuted(false);
     });
 
+    socket.on('disconnect-the-call', hanlde_Disconnect_Call);
+
     return () => {
       socket.off('reject-audio-called', handle_Reject_AudioCall);
       socket.off('end-audio-called', handle_End_AudioCall);
@@ -183,9 +198,10 @@ export default function AudioCallUI() {
       socket.off('muted-audio');
       socket.off('unmuted-audio');
       socket.off('ice-candidate2');
-      socket.off('connected-audio-call')
+      socket.off('connected-audio-call');
+      socket.off('disconnect-the-call', hanlde_Disconnect_Call);
     };
-  }, [socket, roomId, handle_Reject_AudioCall, handle_End_AudioCall, handle_Accpeted_AudioCall, handle_Offer_AudioCall, hanlde_Answered_AudioCall]);
+  }, [socket, roomId, handle_Reject_AudioCall, handle_End_AudioCall, handle_Accpeted_AudioCall, handle_Offer_AudioCall, hanlde_Answered_AudioCall, hanlde_Disconnect_Call]);
 
   // Cleanup interval on unmount
   useEffect(() => {
@@ -198,7 +214,6 @@ export default function AudioCallUI() {
 
   const Handle_End_Audio_Call = (roomId : string ) => {
       socket.emit('end-audio-call', roomId , myProfile?.message.data.public_Id ); //Call Ender Id
-      // navigators(`/chat-room?roomId=${roomId}&otherUser-public_Id=${user_Id}`)
   };
 
   const handle_Mute = () => {
@@ -259,6 +274,9 @@ export default function AudioCallUI() {
         <p className="text-xs sm:text-sm text-gray-300">
           {isCall_Start ? formatTime(seconds) : Other_UserData?.active_status ? 'Ringing...' : 'Calling...'}
         </p>
+        {/* <p className="text-[10px] sm:text-xs text-red-300 mt-1">
+          Page reload karoge to audio call disconnect ho jayega. Please use the End button.
+        </p> */}
 
         {/* Mute Indicator */}
         {isOtherMuted && (
