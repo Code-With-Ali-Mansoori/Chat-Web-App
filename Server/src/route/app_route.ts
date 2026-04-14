@@ -14,6 +14,11 @@ const upload = multer({storage});
 export const app_route = express.Router();
 
 //Main App Routes
+app_route.get('/is/auth', authCheck ,(req, res) => {
+    res.status(200).json('User is Authenticated!');
+    return;
+});
+
 app_route.put('/user/profile/setup', authCheck, upload.single("user_avatar"), handle_ProfileSetup); //Profile setup -- add multer and cloudinary code
 app_route.delete('/user/logout', authCheck, logout_user);   //Logout
 app_route.get('/user/profile', authCheck, welcome_user); // MY- welcome page - Profile page 

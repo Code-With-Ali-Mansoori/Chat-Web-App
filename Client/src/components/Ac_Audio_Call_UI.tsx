@@ -292,7 +292,7 @@ export default function AudioCallUI() {
   overflow-hidden
 ">
   <img
-    src={Other_UserData?.userAvatar}
+    src={Other_UserData?.user_avatar}
     alt="avatar"
     className="w-full h-full object-cover"
   />
