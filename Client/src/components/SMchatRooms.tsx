@@ -10,7 +10,7 @@ const SMchatRoomsUI = ({roomId } : propesType) => {
 
   const navigator =  useNavigate();
   const {data} = UseRoomUserData(roomId);  
-
+  
   const formatted = new Date(data?.data?.message?.last_active).toLocaleString("en-IN", {
     day: "2-digit",
     month: "short",
@@ -33,8 +33,8 @@ const SMchatRoomsUI = ({roomId } : propesType) => {
                 <small className="font-light">{formatted}</small>
             </div>
 
-            <div className="md: flex justify-end w-2/6">
-                <small className="items-end px-1 font-medium text-gray-400 ">
+            <div className=" flex justify-end w-2/6">
+                <small className="items-end px-1 font-medium text-gray-600 ">
                     {data?.data?.message?.active_Status ? 'Online' : 'offline'}
                 </small>
             </div>

@@ -6,6 +6,8 @@ import useOtherUser from "../Hooks/useOtherUser";
 import useProfile_Hooks from "../Hooks/Profile.Hook";
 import { IoMdMicOff } from "react-icons/io";  
 import { useUnloadWarning } from "../Hooks/useUnloadWarning";
+import useSearch from "../Hooks/SearchContext.hook";
+import { handle_Call_Update } from "../helper/Update_call";
 
 export default function VideoCallUI() {
   const [isMuted, setIsMuted] = useState(false);
@@ -14,6 +16,7 @@ export default function VideoCallUI() {
   const [seconds, setSeconds] = useState(0);
   const [isOtherMuted, setIsOtherMuted] = useState<boolean>(false);
 
+  const {callId, setCallId} = useSearch();
   const socket = useSocket();
   useUnloadWarning();
 
@@ -40,6 +43,8 @@ export default function VideoCallUI() {
 
   const pcRef = useRef<RTCPeerConnection | null>(null);
   const isOfferSetRef = useRef(false);
+  const isRemoteDescriptionSetRef = useRef(false);
+  const iceCandidateQueueRef = useRef<RTCIceCandidate[]>([]);
 
   const localStreamRef = useRef<MediaStream | null>(null);
   const localVideoRef = useRef<HTMLVideoElement>(null);
@@ -112,6 +117,7 @@ export default function VideoCallUI() {
     return pcRef.current;
   }, [roomId, socket]);
 
+    // console.log(Other_UserData?.userAvatar)
 
   const handle_Reject_VideoCall = useCallback((roomId: string, otherUserId: string) => {
       navigators(`/chat-room?roomId=${roomId}&otherUser-public_Id=${otherUserId}`);
@@ -152,10 +158,18 @@ export default function VideoCallUI() {
   }, [myProfile?.message.data.public_Id, createPC, socket, clearCallEndTimeout]);
 
 
-  const handle_End_VideoCall = useCallback((roomId: string) => {
+  const handle_End_VideoCall = useCallback( async (roomId: string) => {
+
+    if ( callId && seconds && isCall_Start ) {
+          await handle_Call_Update(seconds.toString(), isCall_Start, callId);
+    };
+
     clearCallEndTimeout();
     setIsCall_Start(false);
+    setCallId(null);
     isOfferSetRef.current = false;
+    isRemoteDescriptionSetRef.current = false;
+    iceCandidateQueueRef.current = [];
     
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
@@ -170,18 +184,35 @@ export default function VideoCallUI() {
     console.log('End Video Call');
   
     navigators(`/chat-room?roomId=${roomId}&otherUser-public_Id=${Other_UserData?.user_publicId}`);
-  }, [navigators, Other_UserData?.user_publicId, clearCallEndTimeout]);
+  }, [navigators, Other_UserData?.user_publicId, clearCallEndTimeout,seconds, isCall_Start, callId, setCallId]);
 
 
   const handle_Offer_VideoCall = useCallback(async (offer: RTCSessionDescriptionInit, roomId: string) => {
     const pc = await createPC();
     if (!pc) return;
-    await pc.setRemoteDescription(new RTCSessionDescription(offer));
+    
+    try {
+      await pc.setRemoteDescription(new RTCSessionDescription(offer));
+      isRemoteDescriptionSetRef.current = true;
+      
+      // Process any queued ICE candidates
+      while (iceCandidateQueueRef.current.length > 0) {
+        const candidate = iceCandidateQueueRef.current.shift();
+        if (candidate) {
+          try {
+            await pc.addIceCandidate(candidate);
+          } catch (error) {
+            console.warn("Error adding queued ICE candidate:", error);
+          }
+        }
+      }
 
-    const answer = await pc.createAnswer();
-    await pc.setLocalDescription(answer);
-
-    socket.emit("answer-video-call", answer, roomId);
+      const answer = await pc.createAnswer();
+      await pc.setLocalDescription(answer);
+      socket.emit("answer-video-call", answer, roomId);
+    } catch (error) {
+      console.error("Error handling offer:", error);
+    }
   }, [createPC, socket]);
 
 
@@ -194,8 +225,28 @@ export default function VideoCallUI() {
       return;
     }
 
-    await pc.setRemoteDescription(new RTCSessionDescription(answer));
-    socket.emit('video-call-Connected', roomId);
+    try {
+      await pc.setRemoteDescription(new RTCSessionDescription(answer));
+      isRemoteDescriptionSetRef.current = true;
+      
+      // Process any queued ICE candidates
+      while (iceCandidateQueueRef.current.length > 0) {
+        const candidate = iceCandidateQueueRef.current.shift();
+        if (candidate) {
+          try {
+            await pc.addIceCandidate(candidate);
+            // console.log(candidate);
+            
+          } catch (error) {
+            console.warn("Error adding queued ICE candidate:", error);
+          }
+        }
+      }
+      
+      socket.emit('video-call-Connected', roomId);
+    } catch (error) {
+      console.error("Error handling answer:", error);
+    }
   }, [socket]);
 
   const hanlde_Disconnect_Call = useCallback(() => {
@@ -220,9 +271,8 @@ export default function VideoCallUI() {
           navigators(`/chat-room?roomId=${roomId}&otherUser-public_Id=${Other_UserData?.user_publicId}`);
         }
       }, 10000);
-    } else {
-      console.log('Continue the call!');
-    }
+    };
+
   }, [navigators, Other_UserData?.user_publicId, socket, clearCallEndTimeout]);
 
   // Socket listeners setup - only depends on stable values
@@ -243,7 +293,17 @@ export default function VideoCallUI() {
 
     socket.on("ice-candidate-video", async (candidate) => {
       if (pcRef.current && candidate) {
-        await pcRef.current.addIceCandidate(new RTCIceCandidate(candidate));
+        try {
+          // If remote description isn't set yet, queue the candidate
+          if (!isRemoteDescriptionSetRef.current) {
+            iceCandidateQueueRef.current.push(new RTCIceCandidate(candidate));
+            // console.log("ICE candidate queued, waiting for remote description");
+          } else {
+            await pcRef.current.addIceCandidate(new RTCIceCandidate(candidate));
+          }
+        } catch (error) {
+          console.error("Error adding ICE candidate:", error);
+        }
       }
     });
 
@@ -323,7 +383,7 @@ export default function VideoCallUI() {
 
         <div className="flex justify-center items-center gap-2 md:gap-3">
           <div className="h-8 w-8 md:h-10 md:w-10 mt-1">
-            <img className="rounded-full" src={Other_UserData?.user_avatar} alt="user_avatar" />
+            <img className="rounded-full" src={Other_UserData?.userAvatar} alt="user_avatar" />
           </div>
 
           <div>

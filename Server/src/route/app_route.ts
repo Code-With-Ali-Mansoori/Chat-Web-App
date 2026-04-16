@@ -8,6 +8,7 @@ import { create_room_handler, EveryUserData, get_Old_Msgs, handleMedia_msgs, sea
 import { chat_sockets, welcome_sockets } from "../controller/ejs";
 
 import multer from "multer";
+import { handle_Call_creation, handle_Call_Logs_Update, handle_Get_CallHistory, hanlde_history_user } from "../controller/call";
 const storage = multer.memoryStorage();
 const upload = multer({storage});
 
@@ -32,6 +33,13 @@ app_route.get('/chat-room/users/publicId=:id', authCheck, specific_user);//used 
 app_route.get('/chat-room/roomId=:roomId', authCheck, EveryUserData);
 app_route.get('/chat-room/all_messages/:roomId', authCheck, get_Old_Msgs);//get all old message 
 app_route.post("/room/msgs/media", authCheck, upload.single('file'), handleMedia_msgs);
+
+//Call Routes
+app_route.post("/create/call-history/data", handle_Call_creation);
+app_route.get("/get/call-history/data", authCheck, handle_Get_CallHistory);
+app_route.get("/call-history/indiv/:userId", authCheck, hanlde_history_user);
+app_route.patch("/update/call-history/data", authCheck, handle_Call_Logs_Update);
+
 
 //Testing Sockets
 // app_route.get('/welcome', authCheck , welcome_sockets); 

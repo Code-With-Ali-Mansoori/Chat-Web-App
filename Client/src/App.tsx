@@ -15,6 +15,7 @@ import IncomingAudioCall from './components/Inc_Audio_UI';
 import IncomingVideoCall from './components/Inc_Video_UI';
 import AudioCallUI from './components/Ac_Audio_Call_UI';
 import VideoCallUI from './components/Ac_Video_Call_UI';
+import Call_history_pg from './components/Call_history_pg';
 
 const App = () => {
   return (
@@ -40,6 +41,7 @@ const App = () => {
             <Route path='/' element={<App_structure/>} >
               <Route index element={<Welcome_msg/>} />
               <Route path='my-chats' element={<Mychats/>} />
+              <Route path='call-history' element={<Call_history_pg/>} />
               <Route path={`user/search`} element={<Search_result/>} />
             </Route>
           </Route>

@@ -37,6 +37,9 @@ export type UserSearched = {
 
     load : boolean,
     setLoad : (value : boolean) => void
+
+    callId : string | null,
+    setCallId : (value : string | null) => void
 };
 
 const ContextData = createContext< null | UserSearched >(null);

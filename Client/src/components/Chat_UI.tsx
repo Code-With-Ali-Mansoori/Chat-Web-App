@@ -7,11 +7,14 @@ import { getFileTypeCategory, validateFile } from "../helper/validateFile"
 import useOtherUser from "../Hooks/useOtherUser"
 import { useSocket } from "../Hooks/Sockets"
 import { useEffect, useState, type ChangeEvent } from "react"
-import useProfile_Hooks from "../Hooks/Profile.Hook";
+import useProfile_Hooks, { type UserProfile } from "../Hooks/Profile.Hook";
 import axios from "axios";
 import Image_msgs from "./Image_msg";
 import Video_msgs from "./Video_msgs";
 import File_msg from "./File_msg";
+import useCall_log from "../Hooks/Call_log";
+import useSearch from "../Hooks/SearchContext.hook";
+import { handle_CallLogs_display } from "../helper/Update_call";
 
 type Media_Data = {
   File_url : string,
@@ -43,6 +46,15 @@ type Message = {
   sentAt: string;
 };
 
+export interface ActiveUserType {
+  active_status: boolean;
+  last_active: string; // ISO date string
+  userAvatar: string;
+  userId: string;
+  user_publicId: string;
+  username: string;
+}
+
 // then Chat-UI hit one more get/api [ /chat-room/users/publicId=:id ] for userdata
 const Chat_UI = () => {
     
@@ -58,6 +70,8 @@ const Chat_UI = () => {
 
   const navigator = useNavigate();
   const socket = useSocket();
+  const { mutateAsync } = useCall_log();
+  const {setCallId} = useSearch();
 
   const [searchParams] = useSearchParams();
   const roomId = searchParams.get("roomId");
@@ -117,6 +131,7 @@ const Chat_UI = () => {
     socket.emit('join-room', roomId);
 
     handle_Load_Old_Chats(roomId);
+    handle_CallLogs_display();
 
     return () => {
       socket.emit('leave-room', roomId);
@@ -351,14 +366,38 @@ const Chat_UI = () => {
       }
     };
 
-    const Audio_Calling_User = (roomId : string, callerId : string) => {
-        socket.emit('audio-call-invite', roomId, callerId);
-        setTimeout( () => navigator(`/active-audio-call?roomId=${roomId}&Called-User-Id=${Other_UserData?.user_publicId}`), 1000);
+    const Audio_Calling_User = async (roomId : string, caller : UserProfile, callee : ActiveUserType) => {
+
+        const data = {
+          caller_id : caller.user_id,
+          callee_id : callee.userId,
+          room_id : roomId,
+          call_type : 'audio-call'
+        };
+
+        const res = await mutateAsync(data);
+        setCallId(res?.data.call_id)
+
+        socket.emit('audio-call-invite', roomId, caller.public_Id, res?.data.call_id);
+        setTimeout( () => navigator(`/active-audio-call?roomId=${roomId}&Called-User-Id=${callee?.user_publicId}`), 1000);
     };
 
-    const Video_Calling_User = (roomId : string, callerId : string) => {
-        socket.emit('video-call-invite', roomId, callerId);
-        setTimeout( () => navigator(`/active-video-call?roomId=${roomId}&Called-User-Id=${Other_UserData?.user_publicId}`), 1000);
+    const Video_Calling_User = async (roomId : string, caller : UserProfile, callee : ActiveUserType) => {
+      
+        // socket.emit('video-call-invite', roomId, caller.public_Id);
+
+        const data = {
+          caller_id : caller.user_id,
+          callee_id : callee.userId,
+          room_id : roomId,
+          call_type : 'video-call'
+        };        
+
+        const res = await mutateAsync(data);
+        setCallId(res?.data.call_id);
+
+        socket.emit('video-call-invite', roomId, caller.public_Id, res?.data.call_id);
+        setTimeout( () => navigator(`/active-video-call?roomId=${roomId}&Called-User-Id=${callee?.user_publicId}`), 1000);
     };
 
   // (listener moved to useEffect to prevent duplicate registrations)
@@ -380,7 +419,7 @@ const Chat_UI = () => {
                         {capitalizeFirstLetter(Other_UserData?.username as string as string)}
                     </big>
 
-                    <small className={`text-left font-medium text-gray-400`}>
+                    <small className={`text-left font-medium text-gray-500`}>
                         { Other_UserData?.active_status ? 'Online' : 'Offline'}
                     </small>
                 </div>
@@ -388,7 +427,7 @@ const Chat_UI = () => {
             <div className="flex w-1/5 justify-center items-center gap-4 lg:gap-6 mr-2">     
                     <div 
                       onClick={() => {
-                        Audio_Calling_User(roomId!, myProfile!.message.data.public_Id!)
+                        Audio_Calling_User(roomId!, myProfile!.message.data, Other_UserData)
                       }}
                        className="hover:cursor-pointer">
                         <Phone strokeWidth={1.25} />
@@ -397,7 +436,7 @@ const Chat_UI = () => {
                     {/* Createing Video Call Feature */}
                     <div
                       onClick={() => {
-                        Video_Calling_User(roomId!, myProfile!.message.data.public_Id!)
+                        Video_Calling_User(roomId!, myProfile!.message.data, Other_UserData)
                       }}
                       className="hover:cursor-pointer">
                       <Video strokeWidth={1.25} size={28}/>

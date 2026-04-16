@@ -40,17 +40,18 @@ const MySearchResults = ({username, _id, Active_Status, user_avatar, Last_active
       onClick={handleUserAction} 
       id={userData.Public_user_id} 
       className="w-full my-3 h-13 flex justify-between items-center border rounded border-gray-500 p-2 hover:cursor-pointer hover:bg-gray-100">
-            <div className=" md: md:pl- cursor-pointer">
+
+            <div className="cursor-pointer">
                 <img className="h-10 w-10 rounded-full border border-gray-600" 
                 src={userData.user_avatar} />
             </div>
 
             <div className="flex w-4/6 p-1 px-3 flex-col justify-center items-start">
-                <p>{userData.username}</p>
+                <p className="text-sm">{userData.username}</p>
                 <small className="font-light">{userData.formatted}</small>
             </div>
 
-            <div className=" flex justify-end w-2/6">
+            <div className=" flex justify-end w-1/6">
                 <small className={`items-end px-1 font-medium text-gray-400`}>
                     {userData.Active_Status ? 'Online': 'offline'}
                 </small>

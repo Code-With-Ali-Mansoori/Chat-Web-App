@@ -108,7 +108,7 @@ export const welcome_user = async ( req: Request, res: Response ) => {
         if ( !user ){ return res.json({message : "User data not found in Cookie"}) }
 
         const Db_user = await user_model.findOne({email : user.email});
-        if ( !Db_user ){ return res.json({message : "User does not Exist"}) }
+        if ( !Db_user ){ return res.json({message : "User does not Exist"}) };
 
         const res_user = {
             username : Db_user.username,
@@ -117,7 +117,8 @@ export const welcome_user = async ( req: Request, res: Response ) => {
             Bio : Db_user.user_Bio,
             gender : Db_user.user_gender,
             public_Id: Db_user.Public_user_id,
-            user_id : Db_user._id
+            user_id : Db_user._id,
+            // last_active : Db_user.Last_active
         };
 
         return res.status(200).json({message : {

@@ -33,15 +33,15 @@ export default function IncomingVideoCall() {
   useEffect(() => {
         socket.emit('join-room', roomId);
     
-        socket.on('end-video-called', ( roomId : string ) => {      
-          navigators(`/chat-room?roomId=${roomId}&otherUser-public_Id=${Other_UserData.user_publicId}`);
+        socket.on('end-video-called', ( ) => {      
+          navigators(-1); //chat-room?roomId=${roomId}&otherUser-public_Id=${Other_UserData.user_publicId}`
         });
 
         socket.on('disconnect-the-call', hanlde_Disconnect_Call);
 
-        socket.on('VideoCall-not-reached', (roomId) => {
+        socket.on('VideoCall-not-reached', () => {
            console.log('You have missed the call!');
-           navigators(`/chat-room?roomId=${roomId}&otherUser-public_Id=${Other_UserData.user_publicId}`);
+           navigators(-1); ///chat-room?roomId=${roomId}&otherUser-public_Id=${Other_UserData.user_publicId}
         });
     
         return () => {

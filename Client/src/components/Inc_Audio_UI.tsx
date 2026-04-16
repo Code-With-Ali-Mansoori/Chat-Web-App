@@ -20,9 +20,10 @@ export default function IncomingAudioCall() {
   
   useUnloadWarning();
 
-  const handle_Reject_Call = (roomId : string , user_Id : string) => {
+  const handle_Reject_Call = (roomId : string) => {
       socket.emit('reject-audio-call', roomId , myProfile?.message.data.public_Id );
-      navigators(`/chat-room?roomId=${roomId}&otherUser-public_Id=${user_Id}`); //Other_Id 
+      navigators(-1);
+      // /chat-room?roomId=${roomId}&otherUser-public_Id=${user_Id}
   };
 
   const handle_Accept_Call = ( roomId : string , user_Id : string ) => {
@@ -32,8 +33,7 @@ export default function IncomingAudioCall() {
       navigators(`/active-audio-call?roomId=${roomId}&Called-User-Id=${user_Id}`); //OtherUser
   };
 
-  const hanlde_Disconnect_Call = useCallback(() => {
-        
+  const hanlde_Disconnect_Call = useCallback(() => {   
     alert('⚠️ Network has Interupted');
       
     setTimeout(() => {
@@ -41,21 +41,22 @@ export default function IncomingAudioCall() {
       socket.emit('disconnect-the-call', roomId);
     }, 2000);
         
-    }, [Other_UserData?.user_publicId, navigators, roomId, socket]);
+  }, [Other_UserData?.user_publicId, navigators, roomId, socket]);
 
   useEffect(() => {
       socket.emit('join-room', roomId);
   
-      socket.on('end-audio-called', ( roomId : string ) => {      
-        navigators(`/chat-room?roomId=${roomId}&otherUser-public_Id=${Other_UserData?.user_publicId}`);
+      socket.on('end-audio-called', () => {      
+        navigators(-1);
+        //`/chat-room?roomId=${roomId}&otherUser-public_Id=${Other_UserData?.user_publicId}`
       });
 
       socket.on('disconnect-the-call', hanlde_Disconnect_Call);
 
-      socket.on('AudioCall-not-reached', (roomId) => {
+      socket.on('AudioCall-not-reached', () => {
            console.log('You have missed the call!');
-           navigators(`/chat-room?roomId=${roomId}&otherUser-public_Id=${Other_UserData.user_publicId}`);
-        });
+           navigators(-1); //chat-room?roomId=${roomId}&otherUser-public_Id=${Other_UserData.user_publicId}`
+      });
   
       return () => {
         socket.off('end-audio-called');
@@ -101,8 +102,8 @@ export default function IncomingAudioCall() {
       {/* ⚫ FOOTER */}
       <div className="bg-gray-300 py-5 flex justify-center items-center gap-10 ">
 
-        {/* ❌ Decline */}
-        <button onClick={() => handle_Reject_Call(roomId as string, Other_UserData?.user_publicId as string)} className="p-5 rounded-full bg-red-600 hover:bg-red-700">
+        {/* ❌ Decline Other_UserData?.user_publicId as string */}
+        <button onClick={() => handle_Reject_Call(roomId as string)} className="p-5 rounded-full bg-red-600 hover:bg-red-700">
           <PhoneOff size={22} />
         </button>
 

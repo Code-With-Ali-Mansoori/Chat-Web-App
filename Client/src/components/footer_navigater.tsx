@@ -1,4 +1,4 @@
-import { Bot, House, MessageCircleMore, Power } from "lucide-react"
+import { Phone, House, MessageCircleMore, Power } from "lucide-react"
 import { useNavigate } from "react-router-dom";
 import { useLogout } from "../Hooks/Logout.Hook";
 
@@ -20,9 +20,9 @@ const Footer_navigater = () => {
                         <small>Chats</small>
                         </div>
 
-                        <div onClick={() => {alert('That feature is Coming soon..')}}  className='flex flex-col justify-center items-center'>
-                        <Bot size={20} strokeWidth={1.5} />
-                        <small>AI</small>
+                        <div onClick={() => {navigator('/call-history')}}  className='flex flex-col justify-center items-center'>
+                        <Phone size={20} strokeWidth={1.5} />
+                        <small>Recent</small>
                         </div>
 
                         <div onClick={() => mutate()} className='flex flex-col  justify-center hover:text-red-600 items-center'>

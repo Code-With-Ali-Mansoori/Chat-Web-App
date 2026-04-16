@@ -12,6 +12,7 @@ export const ContextHanlder_Function = ({children} : app_props) => {
     const [selectedUser, setSelectedUser] = useState<SelectedUserData | null>(null);
     const [isPop_Unable, setIsPop_Unable] = useState<boolean>(false);
     const [load, setLoad] = useState<boolean>(false);
+    const [callId, setCallId] = useState<string | null>(null);
 
     return ( 
         <ContextData.Provider 
@@ -25,7 +26,9 @@ export const ContextHanlder_Function = ({children} : app_props) => {
             isPop_Unable,
             setIsPop_Unable,
             load,
-            setLoad
+            setLoad,
+            callId,
+            setCallId
             }}>
         {children}
         </ContextData.Provider>

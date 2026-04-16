@@ -5,6 +5,8 @@ import useOtherUser from "../Hooks/useOtherUser";
 import { useSocket } from "../Hooks/Sockets";
 import useProfile_Hooks from "../Hooks/Profile.Hook";
 import { useUnloadWarning } from "../Hooks/useUnloadWarning";
+import useSearch from "../Hooks/SearchContext.hook";
+import { handle_Call_Update } from "../helper/Update_call";
 
 export default function AudioCallUI() {
   const [isMuted, setIsMuted] = useState(false);
@@ -12,8 +14,9 @@ export default function AudioCallUI() {
   const [isOtherMuted, setIsOtherMuted] = useState<boolean>(false);
   const [isCall_Start, setIsCall_Start] = useState<boolean>(false);
 
+  const {callId, setCallId} = useSearch();
   const socket = useSocket();
-  useUnloadWarning();
+  useUnloadWarning();  
 
   const navigators =  useNavigate();
   const [searchParams] = useSearchParams();
@@ -87,12 +90,18 @@ export default function AudioCallUI() {
   }, []);
 
   const handle_Reject_AudioCall = useCallback((roomId: string, otherUserId: string) => {
-    navigators(`/chat-room?roomId=${roomId}&otherUser-public_Id=${otherUserId}`);
+    navigators(`/chat-room?roomId=${roomId}&otherUser-public_Id=${otherUserId}`); //-1
   }, [navigators]);
 
-  const handle_End_AudioCall = useCallback((roomId: string) => {
+  const handle_End_AudioCall = useCallback(async (roomId: string) => {
+
+    if ( callId && seconds && isCall_Start ) {
+      await handle_Call_Update(seconds.toString(), isCall_Start, callId);
+    };
+    
     clearCallEndTimeout();
     setIsCall_Start(false);
+    setCallId(null);
     isOfferSetRef.current = false;
     
     if (intervalRef.current) {
@@ -106,7 +115,7 @@ export default function AudioCallUI() {
     console.log('End Audio Call');
   
     navigators(`/chat-room?roomId=${roomId}&otherUser-public_Id=${Other_UserData?.user_publicId}`);
-  }, [navigators, Other_UserData?.user_publicId, clearCallEndTimeout]);
+  }, [navigators, Other_UserData?.user_publicId, clearCallEndTimeout, seconds, isCall_Start, callId, setCallId]);
 
 
   //Callee Accept the Call, Caller will get event and he will create Offer as well as Sending to Callee
@@ -292,7 +301,7 @@ export default function AudioCallUI() {
   overflow-hidden
 ">
   <img
-    src={Other_UserData?.user_avatar}
+    src={Other_UserData?.userAvatar}
     alt="avatar"
     className="w-full h-full object-cover"
   />

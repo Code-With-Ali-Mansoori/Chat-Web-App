@@ -6,13 +6,16 @@ import { Decrypt_msg, Encrypt_msg } from "../utils/secure_msg";
 
 export const sockets_connect = async (socket : Socket) => {
 try {
-    const userId = socket.data.user.userId;
-
-    const userDB = await user_model.findById({_id : userId });
+    const userId = socket.data.user.userId;    
+    const userDB = await user_model.findById({_id : userId });    
     if (!userDB) return socket.disconnect();
 
-    await user_model.findByIdAndUpdate(userDB._id, { Active_Status: true });        
-    return;
+    await user_model.findByIdAndUpdate(userDB._id, { 
+        Active_Status: true, 
+        Last_active: new Date()
+    });  
+
+    return userDB.Public_user_id;
 
 } catch (error) {
     socket.disconnect();

@@ -7,7 +7,7 @@ io.use(socket_middleware);  //Socket Middlware
 io.on("connection", (socket) => {
 
     //1. Connect Socket
-    sockets_connect(socket);
+    const public_Id = sockets_connect(socket);
 
     //2.Join Room & Msg seen when enter in Rooms
     socket.on('join-room', async (room_id) => {
@@ -69,7 +69,7 @@ io.on("connection", (socket) => {
         socket.to(roomId).emit('reject-audio-called', roomId, otherUserId); 
     });
 
-    socket.on('end-audio-call', (roomId, Call_EnderId) => {        
+    socket.on('end-audio-call', (roomId) => {        
         io.to(roomId).emit('end-audio-called', roomId); 
     });
 
@@ -108,8 +108,8 @@ io.on("connection", (socket) => {
     })
 
     //10. Video Call - WebRTC 
-    socket.on('video-call-invite', (room_id, callerId) => {
-        socket.to(room_id).emit('incomming-video-call', room_id, callerId); 
+    socket.on('video-call-invite', (room_id, callerId, call_id) => {
+        socket.to(room_id).emit('incomming-video-call', room_id, callerId, call_id); 
     });
 
     socket.on('reject-video-call', (roomId, otherUserId) => {        

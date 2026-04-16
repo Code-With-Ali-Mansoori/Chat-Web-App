@@ -9,7 +9,7 @@ const Profile_Section = () => {
   const navigator =  useNavigate();
   const { data } = useProfile_Hooks();
 
-  //isLoading && setLoad(true); //Access by REDUX 
+  //isLoading && setLoad(true); //Access by REDUX   
 
   return (
     <> 
@@ -18,7 +18,7 @@ const Profile_Section = () => {
       <div className='h-full sm:px-4 px-1 md:px-7 flex justify-center items-center gap-3 '>
                     <div onClick={() => {navigator('/profile')}} 
                     className={`h-10 w-10 cursor-pointer border border-gray-300 rounded-full`}>
-                      <img className="h-full w-full rounded-full" src={`${data?.message?.data?.avatar}`} alt="" />
+                      <img className="h-full w-full rounded-full" src={data?.message?.data?.avatar} alt="" />
                     </div>
 
                     <div className='hidden sm:flex flex-col justify-center'>
