@@ -21,15 +21,20 @@ export default function IncomingAudioCall() {
   useUnloadWarning();
 
   const handle_Reject_Call = (roomId : string) => {
-      socket.emit('reject-audio-call', roomId , myProfile?.message.data.public_Id );
+      socket.emit('reject-audio-call', roomId , myProfile?.message.data.user_id );
       navigators(-1);
       // /chat-room?roomId=${roomId}&otherUser-public_Id=${user_Id}
   };
 
   const handle_Accept_Call = ( roomId : string , user_Id : string ) => {
+      // // 🔧 Join room immediately to ensure we're in the room when accepting
+      socket.emit('join-room', roomId);
+      
+      // Wait a bit to ensure join-room is processed, then send accept
       setTimeout(() => {
           socket.emit('accept-audio-call', roomId , myProfile?.message.data.public_Id ); //MineId 
-      }, 100);
+      }, 200);
+      
       navigators(`/active-audio-call?roomId=${roomId}&Called-User-Id=${user_Id}`); //OtherUser
   };
 

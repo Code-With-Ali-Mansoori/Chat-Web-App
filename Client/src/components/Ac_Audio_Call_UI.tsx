@@ -78,9 +78,11 @@ export default function AudioCallUI() {
   return pcRef.current;
   }, [roomId, socket]);
 
+
   useEffect(() => {
     isCallStartRef.current = isCall_Start;
   }, [isCall_Start]);
+
 
   const clearCallEndTimeout = useCallback(() => {
     if (callEndTimeoutRef.current !== null) {
@@ -89,9 +91,12 @@ export default function AudioCallUI() {
     }
   }, []);
 
-  const handle_Reject_AudioCall = useCallback((roomId: string, otherUserId: string) => {
-    navigators(`/chat-room?roomId=${roomId}&otherUser-public_Id=${otherUserId}`); //-1
+
+  const handle_Reject_AudioCall = useCallback(() => {
+    // roomId: string, otherUserId: string)
+    navigators(-1); //`/chat-room?roomId=${roomId}&otherUser-public_Id=${otherUserId}`
   }, [navigators]);
+
 
   const handle_End_AudioCall = useCallback(async (roomId: string) => {
 
@@ -112,38 +117,50 @@ export default function AudioCallUI() {
     localStreamRef.current?.getTracks().forEach(track => track.stop()); //Closing Mic
     pcRef.current?.close(); //Closing WebRTC connection
  
-    console.log('End Audio Call');
-  
     navigators(`/chat-room?roomId=${roomId}&otherUser-public_Id=${Other_UserData?.user_publicId}`);
-  }, [navigators, Other_UserData?.user_publicId, clearCallEndTimeout, seconds, isCall_Start, callId, setCallId]);
+
+  }, 
+  [navigators, clearCallEndTimeout, seconds, isCall_Start, callId, setCallId, Other_UserData?.user_publicId]);
 
 
   //Callee Accept the Call, Caller will get event and he will create Offer as well as Sending to Callee
   const handle_Accpeted_AudioCall = useCallback(async (roomId: string, reciverId: string) => {
+
+    if (!myProfile?.message.data.public_Id) {
+      console.warn('❌ Profile not loaded yet, retrying...');
+      setTimeout(() => handle_Accpeted_AudioCall(roomId, reciverId), 500);
+      return;
+    }
+
     clearCallEndTimeout();
     setIsCall_Start(true);
 
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
-    }
+    };
+
     intervalRef.current = setInterval(() => {
       setSeconds((prev) => prev + 1);
     }, 1000);
 
     const Pc = await createPC(); //TURN Server Req For Connection
 
-    if (reciverId !== myProfile?.message.data.public_Id) {
+    if ( reciverId !== myProfile?.message.data.public_Id ) {
+
       const offer = await Pc.createOffer(); //Create SDP offer
       await Pc.setLocalDescription(offer); // Store Offer Locally
 
       isOfferSetRef.current = true; // ✅ mark ready
       socket.emit('audio-call-offer', offer, roomId); //Signaling and Send offer to Callee
-    }
+
+    };
+
   }, [myProfile?.message.data.public_Id, createPC, socket, clearCallEndTimeout]);
 
 
   //Callee will get the offer and here sends Answer to Caller 
   const handle_Offer_AudioCall = useCallback(async (offer: RTCSessionDescriptionInit, roomId: string) => {
+
     const pc = await createPC(); // Using same WebRTC connection
     await pc.setRemoteDescription(new RTCSessionDescription(offer)); // Store Caller Offer Remotely
 
@@ -157,14 +174,17 @@ export default function AudioCallUI() {
   //Caller will listen and store answer, also signalling for Acknowledgement
   const hanlde_Answered_AudioCall = useCallback(async (answer: RTCSessionDescriptionInit, roomId: string) => {
     const pc = pcRef.current;
-    if (!pc) return;
+    if (!pc) {
+      console.error('❌ PeerConnection not initialized when receiving answer');
+      return;
+    }
 
     // ❗ Wait until offer is set
     if (!isOfferSetRef.current) {
-      console.warn("Offer not ready yet, delaying answer...");
+      console.warn("⏳ Offer not ready yet, delaying answer...");
       setTimeout(() => {
         socket.emit("answer-audio-call", answer, roomId);
-        console.log('Again Signalling...');
+        console.log('🔄 Again Signalling...');
       }, 100);
       return;
     }
@@ -184,6 +204,7 @@ export default function AudioCallUI() {
       
     }, [Other_UserData?.user_publicId, navigators, roomId, socket]);
 
+
     const handle_CallENDUp_Timer = useCallback((roomId : string) => {
       clearCallEndTimeout();
 
@@ -198,10 +219,9 @@ export default function AudioCallUI() {
       }
     }, [navigators, Other_UserData?.user_publicId, socket, clearCallEndTimeout]);
 
-  // Socket listeners setup - only depends on stable values
-  useEffect(() => {
 
-    handle_CallENDUp_Timer(roomId)
+  useEffect(() => {
+    handle_CallENDUp_Timer(roomId);
 
     socket.emit('join-room', roomId);
     socket.on('reject-audio-called', handle_Reject_AudioCall);
@@ -211,7 +231,7 @@ export default function AudioCallUI() {
     socket.on('answered-audio-call', hanlde_Answered_AudioCall);
 
     socket.on('connected-audio-call', () => {
-      console.log('Audio Call Happening...'); 
+      console.log('Audio Call Connected');
     });
 
     socket.on("ice-candidate2", async (candidate) => {
@@ -255,7 +275,7 @@ export default function AudioCallUI() {
   }, []);
 
   const Handle_End_Audio_Call = (roomId : string ) => {
-      socket.emit('end-audio-call', roomId , myProfile?.message.data.public_Id ); //Call Ender Id
+      socket.emit('end-audio-call', roomId , myProfile?.message.data.user_id ); //Call Ender Id
   };
 
   const handle_Mute = () => {

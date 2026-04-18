@@ -52,15 +52,16 @@ export default function IncomingVideoCall() {
     
   }, [navigators, socket, roomId, Other_UserData?.user_publicId, hanlde_Disconnect_Call]);
 
-  const handle_Reject_Call = (roomId : string , user_Id : string) => {
+  const handle_Reject_Call = (roomId : string ) => {
       socket.emit('reject-video-call', roomId , myProfile?.message.data.public_Id );
-      navigators(`/chat-room?roomId=${roomId}&otherUser-public_Id=${user_Id}`); //Other_Id 
+      // navigators(`/chat-room?roomId=${roomId}&otherUsPer-public_Id=${user_Id}`); //Other_Id 
+      navigators(-1);
   };
 
   const handle_Accept_Call = ( roomId : string , user_Id : string ) => {
       setTimeout(() => {
           socket.emit('accept-video-call', roomId , myProfile?.message.data.public_Id ); //MineId 
-      }, 100);
+      }, 200);
       navigators(`/active-video-call?roomId=${roomId}&Called-User-Id=${user_Id}`); //OtherUser
   };
 
@@ -122,7 +123,7 @@ export default function IncomingVideoCall() {
       <div className="relative z-10 bg-gray-400 backdrop-blur py-5 flex justify-center items-center gap-10 ">
 
         {/* ❌ Decline */}
-        <button onClick={() => handle_Reject_Call(roomId as string, Other_UserData.user_publicId as string)} className="p-5 rounded-full bg-red-600 hover:bg-red-700">
+        <button onClick={() => handle_Reject_Call(roomId as string)} className="p-5 rounded-full bg-red-600 hover:bg-red-700">
           <PhoneOff size={22} />
         </button>
 

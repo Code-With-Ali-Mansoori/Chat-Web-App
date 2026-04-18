@@ -229,7 +229,7 @@ const Chat_UI = () => {
       socket.off('update_seen_many');
       socket.off('receive-media');
       socket.off('incomming-audio-call');
-      socket.off('incomming-video-call')
+      socket.off('incomming-video-call');
     };
 
   }, [socket, myProfile, setnewMessages, navigator]);
@@ -378,14 +378,12 @@ const Chat_UI = () => {
         const res = await mutateAsync(data);
         setCallId(res?.data.call_id)
 
-        socket.emit('audio-call-invite', roomId, caller.public_Id, res?.data.call_id);
+        socket.emit('audio-call-invite', roomId, caller.public_Id, res?.data.call_id, callee.userId);
         setTimeout( () => navigator(`/active-audio-call?roomId=${roomId}&Called-User-Id=${callee?.user_publicId}`), 1000);
     };
 
     const Video_Calling_User = async (roomId : string, caller : UserProfile, callee : ActiveUserType) => {
       
-        // socket.emit('video-call-invite', roomId, caller.public_Id);
-
         const data = {
           caller_id : caller.user_id,
           callee_id : callee.userId,
@@ -396,7 +394,7 @@ const Chat_UI = () => {
         const res = await mutateAsync(data);
         setCallId(res?.data.call_id);
 
-        socket.emit('video-call-invite', roomId, caller.public_Id, res?.data.call_id);
+        socket.emit('video-call-invite', roomId, caller.public_Id, res?.data.call_id, callee.userId);
         setTimeout( () => navigator(`/active-video-call?roomId=${roomId}&Called-User-Id=${callee?.user_publicId}`), 1000);
     };
 

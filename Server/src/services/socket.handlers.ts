@@ -3,30 +3,92 @@ import user_model from "../model/user_schema";
 import message_model from "../model/msg_schema";
 import room_model from "../model/chat_room_schema";
 import { Decrypt_msg, Encrypt_msg } from "../utils/secure_msg";
+import call_model from "../model/Call_Schema";
 
-export const sockets_connect = async (socket : Socket) => {
+type dataType = {
+    user_publicId? : string,
+    userId : string
+}
+
+type T = {
+    callerId : string,
+    calleeId : string
+}
+
+export const sockets_connect = async (socket : Socket) : Promise<dataType | null> => {
 try {
     const userId = socket.data.user.userId;    
-    const userDB = await user_model.findById({_id : userId });    
-    if (!userDB) return socket.disconnect();
+    const userDB = await user_model.findById({_id : userId });  
+
+    if (!userDB) { 
+        socket.disconnect();
+        return null;
+    }
 
     await user_model.findByIdAndUpdate(userDB._id, { 
         Active_Status: true, 
         Last_active: new Date()
     });  
-
-    return userDB.Public_user_id;
+    
+    return {
+        user_publicId : userDB?.Public_user_id!,
+        userId : userDB.id
+    };
 
 } catch (error) {
     socket.disconnect();
     console.log('User disconnected!');
-    return;
+    return null;
 
 }};
+
+export const hanlde_otherUserId = async (call_id : string, calleeId : string) : Promise<string | null> => {
+try {
+
+    const call_data = await call_model.findById(call_id);
+
+    if ( !call_data) { 
+        console.log('Something we not found!', call_data);
+        return null;
+    };
+
+    if ( call_data?.caller_id.toString() !== calleeId) {
+        return call_data?.callee_id.toString();
+
+    } else if ( call_data?.callee_id.toString() === calleeId ) {
+        return call_data?.callee_id.toString();
+
+    } else {
+        return 'No userId is mathced!';
+
+    };
+        
+} catch (error) {
+    console.log('Error in hanlde_otherUserId', error);
+    return null;
+    
+}};
+
+export const Give_usersId = async (roomId : string, reciverId : string) : Promise< T | null> => {
+
+    const room = await room_model.findById(roomId);
+    if (!room) return null;
+    
+    const members = room.members[0];
+
+    let callerId = members.admin_Userid.toString() === reciverId ? members?.Other_Userid.toString() : members?.admin_Userid.toString();
+
+    let calleeId = members.admin_Userid.toString() !== reciverId ? members?.Other_Userid.toString() : members?.admin_Userid.toString();
+
+    return { callerId, calleeId };
+
+};
 
 export const disconnect_socket = async (socket : Socket) => {   
 try {
     const userId = socket.data.user.userId;
+
+    const userDB = await user_model.findById({_id : userId });    
     await user_model.findByIdAndUpdate({_id : userId}, { Active_Status: false });
         
     socket.disconnect();
@@ -72,11 +134,10 @@ try {
 
 export const handleSeen = async (socket : Socket, room_id : any) => {
     const usersId = socket.data.user.userId;
-    socket.join(room_id);
 
     if (!usersId) {
         throw new Error('UserID not found for Seen Feature!');
-    }
+    };
 
     const result = await message_model.updateMany({
         room_id: room_id,

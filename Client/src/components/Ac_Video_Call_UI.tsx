@@ -117,10 +117,11 @@ export default function VideoCallUI() {
     return pcRef.current;
   }, [roomId, socket]);
 
-    // console.log(Other_UserData?.userAvatar)
+  // console.log(Other_UserData?.userAvatar)
 
-  const handle_Reject_VideoCall = useCallback((roomId: string, otherUserId: string) => {
-      navigators(`/chat-room?roomId=${roomId}&otherUser-public_Id=${otherUserId}`);
+  const handle_Reject_VideoCall = useCallback(() => {
+    //roomId: string, otherUserId: string
+      navigators(-1); ///chat-room?roomId=${roomId}&otherUser-public_Id=${otherUserId}
   }, [navigators]);
 
   useEffect(() => {
@@ -133,6 +134,7 @@ export default function VideoCallUI() {
       callEndTimeoutRef.current = null;
     }
   }, []);
+
 
   const handle_Accpeted_VideoCall = useCallback(async (roomId: string, reciverId: string) => {
     clearCallEndTimeout();
@@ -153,7 +155,7 @@ export default function VideoCallUI() {
       await pc.setLocalDescription(offer);
 
       isOfferSetRef.current = true;
-      socket.emit('video-call-offer', offer, roomId);
+      socket.emit('video-call-offer', offer, roomId, reciverId);
     }
   }, [myProfile?.message.data.public_Id, createPC, socket, clearCallEndTimeout]);
 
@@ -209,14 +211,14 @@ export default function VideoCallUI() {
 
       const answer = await pc.createAnswer();
       await pc.setLocalDescription(answer);
-      socket.emit("answer-video-call", answer, roomId);
+      socket.emit("answer-video-call", answer, roomId, Other_UserData?.user_Id);
     } catch (error) {
       console.error("Error handling offer:", error);
     }
-  }, [createPC, socket]);
+  }, [createPC, socket, Other_UserData?.user_Id]);
 
 
-  const hanlde_Answered_VideoCall = useCallback(async (answer: RTCSessionDescriptionInit, roomId: string) => {
+  const hanlde_Answered_VideoCall = useCallback(async (answer: RTCSessionDescriptionInit, roomId: string, reciverId : string) => {
     const pc = pcRef.current;
     if (!pc) return;
 
@@ -243,11 +245,12 @@ export default function VideoCallUI() {
         }
       }
       
-      socket.emit('video-call-Connected', roomId);
+      socket.emit('video-call-Connected', roomId, reciverId);
     } catch (error) {
       console.error("Error handling answer:", error);
     }
   }, [socket]);
+
 
   const hanlde_Disconnect_Call = useCallback(() => {
     
@@ -258,7 +261,8 @@ export default function VideoCallUI() {
         socket.emit('disconnect-the-call', roomId); 
     }, 2000);
     
-  }, [Other_UserData?.user_publicId, navigators, roomId, socket])
+  }, [Other_UserData?.user_publicId, navigators, roomId, socket]);
+
 
   const handle_CallENDUp_Timer = useCallback((roomId : string) => {
     clearCallEndTimeout();
@@ -267,13 +271,14 @@ export default function VideoCallUI() {
       callEndTimeoutRef.current = window.setTimeout(() => {
         if (!isCallStartRef.current) {
           console.log('Call Cut!');
-          socket.emit('VideoCall-not-reached', roomId);
+          socket.emit('VideoCall-not-reached', roomId, Other_UserData?.user_Id);
           navigators(`/chat-room?roomId=${roomId}&otherUser-public_Id=${Other_UserData?.user_publicId}`);
         }
       }, 10000);
     };
 
-  }, [navigators, Other_UserData?.user_publicId, socket, clearCallEndTimeout]);
+  }, [navigators, Other_UserData?.user_publicId, Other_UserData?.user_Id, socket, clearCallEndTimeout]);
+
 
   // Socket listeners setup - only depends on stable values
   useEffect(() => {

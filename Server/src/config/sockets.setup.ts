@@ -1,16 +1,31 @@
+import { Socket } from 'socket.io';
 import {io} from '../index';
-import { disconnect_socket, handle_Send_Msg, handleSeen, instantMsg_Seen, sockets_connect } from '../services/socket.handlers';
+import { disconnect_socket, Give_usersId, handle_Send_Msg, handleSeen, hanlde_otherUserId, instantMsg_Seen, sockets_connect } from '../services/socket.handlers';
 import { socket_middleware } from '../utils/sockets.middleware';
+import room_model from '../model/chat_room_schema';
 
 io.use(socket_middleware);  //Socket Middlware
 
-io.on("connection", (socket) => {
+// Map to store userId -> socketId for quick lookup
+export const userSocketMap = new Map<string, string>();
 
+io.on("connection", async (socket : Socket) => {
+    
     //1. Connect Socket
-    const public_Id = sockets_connect(socket);
+    const data = await sockets_connect(socket);
+
+    if (!data) {
+        console.log("User not authenticated or no data");
+        return;
+    };
+
+    const { user_publicId, userId } = data;
+    userSocketMap.set(userId, socket.id); //userId -> socketId [ Add to map ]
 
     //2.Join Room & Msg seen when enter in Rooms
-    socket.on('join-room', async (room_id) => {
+    socket.on('join-room', async (room_id : string) => {
+
+        socket.join(room_id);
         const updatedIds = await handleSeen(socket, room_id); 
         //It will give all the seen msgs_Id when enetered in Room
 
@@ -18,7 +33,6 @@ io.on("connection", (socket) => {
         if (updatedIds && updatedIds.length > 0) {
             io.to(room_id).emit('update_seen_many', updatedIds);
         };
-
     });
     
     //3.Leave Room 
@@ -61,20 +75,80 @@ io.on("connection", (socket) => {
     });
 
     //9.Audio Calling ( WebRTC )
-    socket.on('audio-call-invite', (room_id, callerId) => {
-        socket.to(room_id).emit('incomming-audio-call', room_id, callerId); 
+    socket.on('audio-call-invite', async (room_id, Prov_callerId, call_id, callee_Id) => {
+
+        const calleeId = await hanlde_otherUserId(call_id, callee_Id);
+
+        if ( !calleeId ) { 
+            console.log('CalleeId is required!', calleeId);
+            return
+        };
+
+        const socketId = userSocketMap.get(calleeId);
+
+        if ( !socketId ) { 
+            console.log('socketId is not found!', socketId);
+            return
+        };
+
+        io.to(socketId).emit('incomming-audio-call', room_id, Prov_callerId, call_id); 
     });
 
-    socket.on('reject-audio-call', (roomId, otherUserId) => {        
-        socket.to(roomId).emit('reject-audio-called', roomId, otherUserId); 
+    socket.on('reject-audio-call', async (roomId, otherUserId) => {  
+    
+        const result = await Give_usersId(roomId, otherUserId);
+
+        if (!result) {
+            console.log("Room not found or invalid");
+            return;
+        };
+
+        const { callerId } = result;
+        const callerSocketId = userSocketMap.get(callerId);
+        
+        if (callerSocketId ) {
+            socket.to(callerSocketId).emit('reject-audio-called', roomId, otherUserId); 
+        };
     });
 
-    socket.on('end-audio-call', (roomId) => {        
-        io.to(roomId).emit('end-audio-called', roomId); 
+    socket.on('end-audio-call', async (roomId, otherUserId) => { 
+        
+        const result = await Give_usersId(roomId, otherUserId);
+
+        if (!result) {
+            console.log("Room not found or invalid");
+            return;
+        };
+
+        const { callerId, calleeId } = result;
+
+        const callerSocketId = userSocketMap.get(callerId);
+        const calleeSocketId = userSocketMap.get(calleeId);
+
+        if (callerSocketId && calleeSocketId) {
+            io.to(callerSocketId).to(calleeSocketId).emit('end-audio-called', roomId);
+        };
+        
+        // socket.to(roomId).emit('end-audio-called', roomId); 
     });
 
-    socket.on('accept-audio-call', (roomId, reciverId) => {
-        io.to(roomId).emit('audio-call-accepted', roomId, reciverId);
+    socket.on('accept-audio-call', async (roomId, reciverId) => { 
+        
+        const result = await Give_usersId(roomId, reciverId);
+
+        if (!result) {
+            console.log("Room not found or invalid");
+            return;
+        };
+
+        const { callerId, calleeId } = result;
+
+        const callerSocketId = userSocketMap.get(callerId);
+        const calleeSocketId = userSocketMap.get(calleeId);
+
+        if (callerSocketId && calleeSocketId) {
+            io.to(callerSocketId).to(calleeSocketId).emit('audio-call-accepted', roomId, reciverId);
+        };
     });
 
     socket.on('audio-call-offer', (offer, roomId) => {
@@ -103,21 +177,67 @@ io.on("connection", (socket) => {
         io.to(roomId).emit('unmuted-audio')
     });
 
-    socket.on('AudioCall-not-reached', (roomId) => {
-        socket.to(roomId).emit('AudioCall-not-reached', roomId);
-    })
+    socket.on('AudioCall-not-reached', (roomId) => {        
+        socket.to(roomId).emit('AudioCall-not-reached', roomId);   
+    });
 
     //10. Video Call - WebRTC 
-    socket.on('video-call-invite', (room_id, callerId, call_id) => {
-        socket.to(room_id).emit('incomming-video-call', room_id, callerId, call_id); 
+    socket.on('video-call-invite', async (room_id, Prov_callerId, call_id, callee_Id) => {
+
+        const calleeId = await hanlde_otherUserId(call_id, callee_Id);
+
+        if ( !calleeId ) { 
+            console.log('CalleeId is required!', calleeId);
+            return
+        };
+
+        const socketId = userSocketMap.get(calleeId);
+
+        if ( !socketId ) { 
+            console.log('socketId is not found!', socketId);
+            return
+        };
+
+        io.to(socketId).emit('incomming-video-call', room_id, Prov_callerId, call_id); 
+        // socket.to(room_id).emit('incomming-video-call', room_id, Prov_callerId, call_id); 
     });
 
-    socket.on('reject-video-call', (roomId, otherUserId) => {        
-        socket.to(roomId).emit('reject-video-called', roomId, otherUserId); 
+    socket.on('reject-video-call', async (roomId, otherUserId) => { 
+        
+        const result = await Give_usersId(roomId, otherUserId);
+
+        if (!result) {
+            console.log("Room not found or invalid");
+            return;
+        };
+
+        const { callerId } = result;
+        const callerSocketId = userSocketMap.get(callerId);
+        
+        if (callerSocketId ) {
+            io.to(callerSocketId).emit('reject-video-called', roomId, otherUserId); 
+        };
+        
+        // io.to(roomId).emit('reject-video-called', roomId, otherUserId); 
     });
 
-    socket.on('accept-video-call', (roomId, reciverId) => {
-        io.to(roomId).emit('video-call-accepted', roomId, reciverId);
+    socket.on('accept-video-call', async (roomId, reciverId) => {
+        
+        const result = await Give_usersId(roomId, reciverId);
+
+        if (!result) {
+            console.log("Room not found or invalid");
+            return;
+        };
+
+        const { callerId, calleeId } = result;
+
+        const callerSocketId = userSocketMap.get(callerId);
+        const calleeSocketId = userSocketMap.get(calleeId);
+
+        if (callerSocketId && calleeSocketId) {
+            io.to(callerSocketId).to(calleeSocketId).emit('video-call-accepted', roomId, reciverId);
+        };
     });
 
     socket.on('video-call-offer', (offer, roomId) => {
@@ -137,17 +257,34 @@ io.on("connection", (socket) => {
     });
 
     socket.on('video-call-mute', (roomId) => {
-        console.log('Video Call Muted');  
+        // console.log('Video Call Muted');  
         io.to(roomId).emit('muted-video')
     });
 
     socket.on('video-call-unmute', (roomId) => {
-        console.log('Video Call Un-mute'); 
-        io.to(roomId).emit('unmuted-video')
+        // console.log('Video Call Un-mute'); 
+        io.to(roomId).emit('unmuted-video');
     });
 
-    socket.on('end-video-call', (roomId) => {        
-        io.to(roomId).emit('end-video-called', roomId); 
+    socket.on('end-video-call', async (roomId, reciverId) => {        
+        // io.to(roomId).emit('end-video-called', roomId); 
+
+        const result = await Give_usersId(roomId, reciverId);
+
+        if (!result) {
+            console.log("Room not found or invalid");
+            return;
+        };
+
+        const { callerId, calleeId } = result;
+
+        const callerSocketId = userSocketMap.get(callerId);
+        const calleeSocketId = userSocketMap.get(calleeId);
+
+        if (callerSocketId && calleeSocketId) {
+            io.to(callerSocketId).to(calleeSocketId).emit('end-video-called', roomId);
+        };
+
     });
 
     //Disconnecting the Call while Browser Refresh or tab changes
@@ -155,12 +292,35 @@ io.on("connection", (socket) => {
         socket.to(roomId).emit('disconnect-the-call');
     });
 
-    socket.on('VideoCall-not-reached', (roomId) => {
-        socket.to(roomId).emit('VideoCall-not-reached', roomId);
+    socket.on('VideoCall-not-reached', async (roomId, reciverId) => {
+        // socket.to(roomId).emit('VideoCall-not-reached', roomId);
+
+        const result = await Give_usersId(roomId, reciverId);
+
+        if (!result) {
+            console.log("Room not found or invalid");
+            return;
+        };
+
+        const { calleeId } = result;
+        const calleeSocketId = userSocketMap.get(calleeId);
+
+        if ( calleeSocketId) {
+            io.to(calleeSocketId).emit('VideoCall-not-reached', roomId);
+        };
+
     })
          
     //8. Disconnect Socket
-    socket.on("disconnect", () => disconnect_socket(socket));
+    socket.on("disconnect", async () => {
+        const userId = socket.data.user?.userId;
+
+        if (userId) {
+            userSocketMap.delete(userId);
+        };
+
+        await disconnect_socket(socket);
+    });
 });
 
 export default io;
@@ -178,3 +338,13 @@ export default io;
 //      8 Seen Features ✅
 //      9 Media Send ✅
 //     10 Loads All OLD Chat messages in room
+
+
+//Last Feature - I want that, incoming audio/video call arives when user is online in app!
+        // Right now, Call is coming only when user is present in the Chat Room!
+
+// Right now solution => 
+// I am thinking to map [ userId = SocketId ]
+//  1st => I got invite-audio/video 
+//  2nd => I will get the socketId from Map() by giving userId
+//  3rd => Send event like this io.to(socketId).emit(...)
