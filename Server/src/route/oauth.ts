@@ -24,7 +24,7 @@ oauth_route.get("/auth/google",
     passport.authenticate('google', { scope: ['profile', 'email'], session: false })
 );
 
-oauth_route.get("/redirects/google/user/chat_app", 
+oauth_route.get("/auth/google/callback", 
     passport.authenticate('google', { failureRedirect: '/oauth/auth/google', session: false }),
     handleOAuth
 );
@@ -34,7 +34,7 @@ oauth_route.get("/auth/facebook",
     passport.authenticate('facebook', { scope: ['email'], session: false })
 );
 
-oauth_route.get("/facebook/redirects", 
+oauth_route.get("/auth/facebook/callback", 
     passport.authenticate('facebook', { failureRedirect: '/oauth/auth/facebook', session: false }),
     handleOAuth
 );

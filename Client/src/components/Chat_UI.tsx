@@ -81,7 +81,7 @@ const Chat_UI = () => {
   const { data : myProfile } = useProfile_Hooks();
 
   const handle_Load_Old_Chats = async (roomId : string) => {
-      const res = await axios.get(`http://localhost:5000/chat-room/all_messages/${roomId}`,{withCredentials : true});
+      const res = await axios.get(`https://chatsy-y2s8.onrender.com/chat-room/all_messages/${roomId}`,{withCredentials : true});
 
       if (res.status !== 200 || !Array.isArray(res.data.message)) {
         console.log('No Msg-Data found!');
@@ -336,7 +336,7 @@ const Chat_UI = () => {
         formData.append("senderId", myProfile?.message.data.user_id);
         formData.append("roomId", roomId);
 
-        const res = await axios.post('http://localhost:5000/room/msgs/media', formData , {withCredentials : true});
+        const res = await axios.post('https://chatsy-y2s8.onrender.com/room/msgs/media', formData , {withCredentials : true});
 
         if (res.status != 200) {
           setSelectedFile(null);

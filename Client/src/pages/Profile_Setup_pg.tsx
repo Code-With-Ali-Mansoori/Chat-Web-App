@@ -26,7 +26,7 @@ const Profile_Setup_pg = () => {
 
   const Handle_User_Provider_Data = async () : Promise<void> => {
       try {
-        const res = await axios.get('http://localhost:5000/init/user/profile', {withCredentials : true});
+        const res = await axios.get('https://chatsy-y2s8.onrender.com/init/user/profile', {withCredentials : true});
 
         if (res.status === 200) {
 
@@ -47,7 +47,7 @@ const Profile_Setup_pg = () => {
   const MutationHandler = async (form_Data : FormData) => {
     try {
         
-      const resp = await axios.put('http://localhost:5000/user/profile/setup', form_Data, {withCredentials : true});
+      const resp = await axios.put('https://chatsy-y2s8.onrender.com/user/profile/setup', form_Data, {withCredentials : true});
 
       if( resp.status === 200 ){
         
@@ -84,7 +84,7 @@ const Profile_Setup_pg = () => {
       <form 
       encType="multipart/form-data" 
       method='PUT' 
-      action='http://localhost:5000/user/profile/setup' 
+      action='https://chatsy-y2s8.onrender.com/user/profile/setup' 
       onSubmit={handleSubmit(Profile_Setup_Handler)}  
       className="flex border-white bg-white flex-col sm:text-center gap-4 p-6 pt-10 rounded-2xl sm:w-3/5">
 

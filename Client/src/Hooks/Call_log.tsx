@@ -1,4 +1,4 @@
- import axios from "axios";
+import axios from "axios";
 import { useMutation } from "@tanstack/react-query"; 
 
 interface calls_type {
@@ -11,7 +11,7 @@ interface calls_type {
 const useCall_log = () => {
 
     const handle_callLogs = async ({caller_id, callee_id, room_id, call_type} : calls_type) => {
-        const res = await axios.post('http://localhost:5000/create/call-history/data', 
+        const res = await axios.post('https://chatsy-y2s8.onrender.com/create/call-history/data', 
         { caller_id, callee_id, room_id, call_type },
         { withCredentials : true });
 
@@ -22,7 +22,7 @@ const useCall_log = () => {
     const CreateCall_Mutate = useMutation({
         mutationFn : handle_callLogs,
         onError : (error) => {console.log(error)},
-        onSuccess : (res) => ( res )
+        onSuccess : (res) => (res)
     });
 
     return CreateCall_Mutate;

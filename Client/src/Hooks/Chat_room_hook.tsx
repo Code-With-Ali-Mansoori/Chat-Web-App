@@ -9,7 +9,7 @@ const UseRoom_hook = () => {
     const navigator = useNavigate();
 
     const handle_RoomCreate = async (user_Id : string) => {
-        const res = await axios.post('http://localhost:5000/create/chat-room', 
+        const res = await axios.post('https://chatsy-y2s8.onrender.com/create/chat-room', 
         { userId : user_Id},{withCredentials : true});
         
         navigator(`/chat-room?roomId=${res.data.data._id}&otherUser-public_Id=${user_Id}`);

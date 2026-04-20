@@ -12,7 +12,7 @@ type CallHistory = {
 };
 
 export const handle_Call_Update = async (call_duration : string, call_connect : boolean, call_Id : string ) => {
-    const res = await axios.patch('http://localhost:5000/update/call-history/data', 
+    const res = await axios.patch('https://chatsy-y2s8.onrender.com/update/call-history/data', 
         {call_duration, call_connect, call_Id}, 
         {withCredentials : true });
 
@@ -22,7 +22,7 @@ export const handle_Call_Update = async (call_duration : string, call_connect : 
 export const handle_CallLogs_display = async () => {
     try {
     
-    const res = await axios.get('http://localhost:5000/get/call-history/data', {withCredentials : true });
+    const res = await axios.get('https://chatsy-y2s8.onrender.com/get/call-history/data', {withCredentials : true });
 
     if (res.status === 200 && res.statusText === 'OK') {
 
@@ -45,7 +45,7 @@ export const handle_CallLogs_display = async () => {
 };
 
 export const handle_Called_UserData = async (user_Id : string ) => {
-    const res = await axios.get(`http://localhost:5000/call-history/indiv/${user_Id}`, 
+    const res = await axios.get(`https://chatsy-y2s8.onrender.com/call-history/indiv/${user_Id}`, 
     {withCredentials : true });
 
     return res.data.message ;
