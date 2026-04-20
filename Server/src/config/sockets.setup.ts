@@ -2,7 +2,6 @@ import { Socket } from 'socket.io';
 import {io} from '../index';
 import { disconnect_socket, Give_usersId, handle_Send_Msg, handleSeen, hanlde_otherUserId, instantMsg_Seen, sockets_connect } from '../services/socket.handlers';
 import { socket_middleware } from '../utils/sockets.middleware';
-import room_model from '../model/chat_room_schema';
 
 io.use(socket_middleware);  //Socket Middlware
 
@@ -19,7 +18,7 @@ io.on("connection", async (socket : Socket) => {
         return;
     };
 
-    const { user_publicId, userId } = data;
+    const { userId } = data;
     userSocketMap.set(userId, socket.id); //userId -> socketId [ Add to map ]
 
     //2.Join Room & Msg seen when enter in Rooms
@@ -281,8 +280,12 @@ io.on("connection", async (socket : Socket) => {
         const callerSocketId = userSocketMap.get(callerId);
         const calleeSocketId = userSocketMap.get(calleeId);
 
-        if (callerSocketId && calleeSocketId) {
+        if ( callerSocketId && !calleeSocketId) {
+            io.to(callerSocketId).emit('end-video-called', roomId);
+
+        } else if (callerSocketId && calleeSocketId) {
             io.to(callerSocketId).to(calleeSocketId).emit('end-video-called', roomId);
+
         };
 
     });
@@ -337,13 +340,16 @@ export default io;
 //      7 Send Messages To Client ✅
 //      8 Seen Features ✅
 //      9 Media Send ✅
-//     10 Loads All OLD Chat messages in room
+//     10 Loads All OLD Chat messages in room ✅
+//     11 Calling Feature Done [ Audio / Video ]✅
+//     12 Call History Feature Done! ✅
 
 
-//Last Feature - I want that, incoming audio/video call arives when user is online in app!
-        // Right now, Call is coming only when user is present in the Chat Room!
+//Last Feature -
+    // I want that, incoming audio/video call arives when user is online in app!
+    // Right now, Call is coming only when user is present in the Chat Room!
 
-// Right now solution => 
+// Solution => 
 // I am thinking to map [ userId = SocketId ]
 //  1st => I got invite-audio/video 
 //  2nd => I will get the socketId from Map() by giving userId

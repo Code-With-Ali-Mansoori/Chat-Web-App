@@ -1,5 +1,5 @@
 import { Socket } from "socket.io";
-import { AuthPayload } from "../middlewares/auth_jwt";
+import { AuthPayload } from "../middlewares/auth_jwt.js";
 import user_model from "../model/user_schema";
 import jwt from 'jsonwebtoken';
 

@@ -1,5 +1,6 @@
 import dotenv from "dotenv";
-dotenv.config();
+dotenv.config({ path: "./.env" });
+
 import express from "express";
 import './config/oauth';
 import { DB_Connection } from "./model/DB_Connection";
@@ -30,7 +31,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(passport.initialize());
 app.use(cookieParser());
 app.use(cors({
-  origin: 'http://localhost:5173',
+  origin:  process.env.CLIENT_URL ||'http://localhost:5173',
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
   allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true,
@@ -47,4 +48,10 @@ app.use('/', app_route);
 //Start server
 node_server.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
+});
+
+//Global Error Handler
+app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+  console.error(err.stack);
+  res.status(500).json({ success: false, message: "Internal Server Error" });
 });

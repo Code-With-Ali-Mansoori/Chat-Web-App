@@ -6,7 +6,6 @@ import { Decrypt_msg, Encrypt_msg } from "../utils/secure_msg";
 import call_model from "../model/Call_Schema";
 
 type dataType = {
-    user_publicId? : string,
     userId : string
 }
 
@@ -31,7 +30,6 @@ try {
     });  
     
     return {
-        user_publicId : userDB?.Public_user_id!,
         userId : userDB.id
     };
 

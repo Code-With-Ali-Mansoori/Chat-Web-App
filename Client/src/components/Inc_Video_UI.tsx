@@ -33,7 +33,7 @@ export default function IncomingVideoCall() {
   useEffect(() => {
         socket.emit('join-room', roomId);
     
-        socket.on('end-video-called', ( ) => {      
+        socket.on('end-video-called', () => {      
           navigators(-1); //chat-room?roomId=${roomId}&otherUser-public_Id=${Other_UserData.user_publicId}`
         });
 

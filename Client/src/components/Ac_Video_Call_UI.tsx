@@ -47,8 +47,8 @@ export default function VideoCallUI() {
   const iceCandidateQueueRef = useRef<RTCIceCandidate[]>([]);
 
   const localStreamRef = useRef<MediaStream | null>(null);
-  const localVideoRef = useRef<HTMLVideoElement>(null);
-  const RemoteVideoRef = useRef<HTMLVideoElement>(null);
+  const localVideoRef = useRef<HTMLVideoElement | null>(null);
+  const RemoteVideoRef = useRef<HTMLVideoElement | null>(null);
   
   const hanlde_WebRTC_Connection = () => {
         const peer = new RTCPeerConnection({
@@ -67,18 +67,58 @@ export default function VideoCallUI() {
         return peer;  
   };
   
+  //Written BY AI
+  const acquireLocalMedia = async () => {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      throw new Error("Media devices are not supported in this browser.");
+    }
+
+    let videoConstraints: MediaTrackConstraints | boolean = {
+      width: 1280,
+      height: 720,
+      facingMode: "user",
+    };
+
+    try {
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const hasVideoInput = devices.some((device) => device.kind === "videoinput");
+      if (!hasVideoInput) {
+        console.warn("No video input device found. Falling back to audio-only.");
+        videoConstraints = false;
+      }
+    } catch (error) {
+      console.warn("Unable to enumerate media devices:", error);
+    }
+
+    try {
+      return await navigator.mediaDevices.getUserMedia({
+        audio: true,
+        video: videoConstraints,
+      });
+    } catch (error: unknown) {
+      const isNotReadable =
+        typeof error === "object" && error !== null && "name" in error && (error as { name?: string }).name === "NotReadableError";
+
+      if (videoConstraints !== false && isNotReadable) {
+        console.warn("Video source unavailable, retrying with audio only.", error);
+        alert('Video source unavailable, retrying with audio only.')
+        return await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+      }
+      throw error;
+    }
+  };
+
   const createPC = useCallback(async () => {
     if (!pcRef.current) {
       const pc = hanlde_WebRTC_Connection();
 
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          audio: true,
-          video: true,
-        });
+        const stream = await acquireLocalMedia();
 
         localStreamRef.current = stream;
         if (localVideoRef.current) {
+          localVideoRef.current.muted = true;
+          localVideoRef.current.playsInline = true;
           localVideoRef.current.srcObject = stream;
         }
 
@@ -91,6 +131,7 @@ export default function VideoCallUI() {
           // console.log('Remote stream received:', remoteStream);
           
           if (RemoteVideoRef.current) {
+            RemoteVideoRef.current.playsInline = true;
             RemoteVideoRef.current.srcObject = remoteStream;
           }
         };
@@ -107,9 +148,11 @@ export default function VideoCallUI() {
 
         pcRef.current = pc;
 
-      } catch (error) {
+        } catch (error) {
         console.error("Error accessing media devices:", error);
-        alert("Unable to access camera or microphone. Please check permissions.");
+        alert(
+          "Unable to access camera or microphone. Please check permissions and ensure no other app is using the camera."
+        );
         return null;
       }
     }
@@ -117,7 +160,6 @@ export default function VideoCallUI() {
     return pcRef.current;
   }, [roomId, socket]);
 
-  // console.log(Other_UserData?.userAvatar)
 
   const handle_Reject_VideoCall = useCallback(() => {
     //roomId: string, otherUserId: string
@@ -161,6 +203,8 @@ export default function VideoCallUI() {
 
 
   const handle_End_VideoCall = useCallback( async (roomId: string) => {
+
+    // alert('OK ')
 
     if ( callId && seconds && isCall_Start ) {
           await handle_Call_Update(seconds.toString(), isCall_Start, callId);
@@ -344,6 +388,7 @@ export default function VideoCallUI() {
   };
 
   const Handle_End_Video_Call = (roomId : string ) => {
+      // alert('Click');
       socket.emit('end-video-call', roomId , myProfile?.message.data.public_Id ); //Call Ender Id
   };
 
@@ -420,7 +465,7 @@ export default function VideoCallUI() {
 
         {/* 👤 REMOTE VIDEO */}
         <div className="absolute inset-0 flex items-center justify-center">
-          <video ref={RemoteVideoRef} autoPlay className="w-full h-full object-cover" />
+          <video ref={RemoteVideoRef} autoPlay playsInline className="w-full h-full object-cover" />
         </div>
 
         {/* 🧍 SELF VIDEO */}
@@ -438,7 +483,7 @@ export default function VideoCallUI() {
           flex items-center justify-center
         ">
           {/* Replace with local video */}
-          <video ref={localVideoRef} autoPlay className="w-full h-full object-cover rounded-lg" />
+          <video ref={localVideoRef} autoPlay playsInline className="w-full h-full object-cover rounded-lg" />
         </div>
       </div>
 

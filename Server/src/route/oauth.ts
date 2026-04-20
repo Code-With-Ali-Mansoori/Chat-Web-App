@@ -1,19 +1,19 @@
 import express from "express";
 import passport from "passport";
 import { handleOAuth } from "../controller/oauth";
-import { authCheck } from "../middlewares/auth_jwt";
+// import { authCheck } from "../middlewares/auth_jwt";
 // import { chat_sockets, welcome_sockets } from "../config/socket.handler";
 
 const oauth_route = express.Router();
 
-//Sample Page
-oauth_route.get('/ejs', ( req : express.Request ,res : express.Response ) => {
-    return res.render('login')
-}); 
+// //Sample Page
+// oauth_route.get('/ejs', ( req : express.Request ,res : express.Response ) => {
+//     return res.render('login')
+// }); 
 
-oauth_route.get('/profile',( req : express.Request ,res : express.Response ) => {
-    return res.render('User_Info')
-}); 
+// oauth_route.get('/profile',( req : express.Request ,res : express.Response ) => {
+//     return res.render('User_Info')
+// }); 
 
 // Testing Sockets
 // oauth_route.get('/welcome', authCheck , welcome_sockets); 
