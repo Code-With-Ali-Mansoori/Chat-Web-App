@@ -22,8 +22,8 @@ const node_server = http.createServer(app);
 export const io = new Server(node_server);
 import "../src/config/sockets.setup";   // Importing Sockets Logic 
 
-const PORT = process.env.PORT || 5000;
-DB_Connection(process.env.MONGO_URI as string)
+const PORT = process.env.PORT || 1000;
+DB_Connection(process.env.MONGO_URI as string);
 
 // Middlewares
 app.use(express.json());
@@ -31,7 +31,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(passport.initialize());
 app.use(cookieParser());
 app.use(cors({
-  origin:  process.env.CLIENT_URL ||'http://localhost:5173',
+  origin: process.env.CLIENT_URL as string || 'http://localhost:5173',
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
   allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true,

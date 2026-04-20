@@ -28,7 +28,11 @@ export const handleOAuth = async (req : Request, res : Response) => {
       const JWT_Password = process.env.JWT_SECRET as string;
       const token = jwt.sign(payload as JwtPayload , JWT_Password);
 
-      res.cookie('token', token);
+      res.cookie('token', token, {
+        httpOnly: true,
+        secure: true,
+        sameSite: "none"
+      });
 
       const DB_user = await user_model.findOne({email : user?.email});
 
@@ -46,11 +50,11 @@ export const handleOAuth = async (req : Request, res : Response) => {
         username : randomUsername
       });
 
-      return res.redirect('http://localhost:5173/profile/setup'); //redirect to Profile-Setup page
+      return res.redirect(`${process.env.CLIENT_URL!}/profile/setup` || 'http://localhost:5173/profile/setup'); //redirect to Profile-Setup page
       // return res.status(201).json({message : 'Redirect to Profile-Setup page'});
     };
 
-    return res.redirect('http://localhost:5173/');
+    return res.redirect(process.env.CLIENT_URL! || 'http://localhost:5173');
     // return res.status(200).json({message : 'Redirect to Welcome page'}); 
 
     } catch (error) {
