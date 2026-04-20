@@ -60,8 +60,7 @@ export const handleOAuth = async (req : Request, res : Response) => {
     return res.redirect(clientUrl);
 
     } catch (error) {
-      res.status(500).json({message : error});
-      return
-
+      console.log("Error : ", error);
+      return res.status(500).json({message : error});
     };
 }; 
