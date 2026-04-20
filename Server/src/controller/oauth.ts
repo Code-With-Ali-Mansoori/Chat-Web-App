@@ -50,12 +50,13 @@ export const handleOAuth = async (req : Request, res : Response) => {
         username : randomUsername
       });
 
-      return res.redirect(`${process.env.CLIENT_URL!}/profile/setup` || 'http://localhost:5173/profile/setup'); //redirect to Profile-Setup page
-      // return res.status(201).json({message : 'Redirect to Profile-Setup page'});
+      return res.redirect(`${process.env.CLIENT_URL!}/profile/setup`); //redirect to Profile-Setup page
+
+      //'http://localhost:5173/profile/setup'
     };
 
-    return res.redirect(process.env.CLIENT_URL! || 'http://localhost:5173');
-    // return res.status(200).json({message : 'Redirect to Welcome page'}); 
+    return res.redirect(process.env.CLIENT_URL!);
+    //|| 'http://localhost:5173
 
     } catch (error) {
       res.status(500).json({message : error});
