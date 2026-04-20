@@ -51,7 +51,7 @@ node_server.listen(PORT, () => {
 });
 
 //Global Error Handler
-app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
-  console.error(err.stack);
-  res.status(500).json({ success: false, message: "Internal Server Error" });
-});
+// app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+//   console.error(err.stack);
+//   res.status(500).json({ success: false, message: "Internal Server Error" });
+// });
