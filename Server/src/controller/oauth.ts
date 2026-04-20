@@ -50,8 +50,10 @@ export const handleOAuth = async (req : Request, res : Response) => {
         username : randomUsername
       });
 
-      const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
+      const clientUrl = process.env.CLIENT_URL!.length > 0 ? process.env.CLIENT_URL : 'http://localhost:5173';
 
+      console.log("Client Url : ", clientUrl);
+      
       return res.redirect(`${clientUrl}/profile/setup`); 
       //redirect to Profile-Setup page
     };
