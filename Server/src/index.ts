@@ -20,7 +20,7 @@ const app = express();
 const node_server = http.createServer(app);
 
 export const io = new Server(node_server);
-import "../src/config/sockets.setup";   // Importing Sockets Logic 
+import "./config/sockets.setup";   // Importing Sockets Logic 
 
 const PORT = process.env.PORT || 1000;
 DB_Connection(process.env.MONGO_URI as string);
