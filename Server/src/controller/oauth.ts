@@ -49,19 +49,11 @@ export const handleOAuth = async (req : Request, res : Response) => {
         isProfileCompleted : false,
         username : randomUsername
       });
-
-      console.log(process.env.CLIENT_URL!.toString());
   
-      const clientUrl = 'http://localhost:5173';
-      
-      console.log('Runn2');
-      return res.redirect(`${clientUrl}/profile/setup`); 
-      //redirect to Profile-Setup page
+      return res.redirect('http://localhost:5173/profile/setup');  //redirect to Profile-Setup page
     };;;
 
-    console.log('Runn3');
-    const clientUrl ='http://localhost:5173';
-    return res.redirect(clientUrl);
+    return res.redirect('http://localhost:5173');
 
     } catch (error) {
       console.log("Error : ", error);
