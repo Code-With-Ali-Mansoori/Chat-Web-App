@@ -50,11 +50,9 @@ export const handleOAuth = async (req : Request, res : Response) => {
         username : randomUsername
       });
 
-      console.log('Runn1');
+      console.log(process.env.CLIENT_URL!.toString());
   
-      const clientUrl = process.env.CLIENT_URL!.length > 0 ? process.env.CLIENT_URL!.toString() : 'http://localhost:5173';
-
-      console.log("Client Url : is Empty?", clientUrl);
+      const clientUrl = 'http://localhost:5173';
       
       console.log('Runn2');
       return res.redirect(`${clientUrl}/profile/setup`); 
@@ -62,7 +60,7 @@ export const handleOAuth = async (req : Request, res : Response) => {
     };;;
 
     console.log('Runn3');
-    const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
+    const clientUrl ='http://localhost:5173';
     return res.redirect(clientUrl);
 
     } catch (error) {
