@@ -30,7 +30,7 @@ useEffect(() => {
     <div className="w-full h-full py">
       <h2 className="ml-1 text-gray-600 font-mono pt-3">Call History</h2>
 
-    { callHistory !== null && callHistory.length > 0 ?
+    { callHistory !== null && callHistory?.length > 0 ?
         (
             callHistory.map((data : CallHistory ) => (
                 <Call_logs key={data._id} logs={data} />

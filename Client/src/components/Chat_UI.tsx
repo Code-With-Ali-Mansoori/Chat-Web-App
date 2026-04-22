@@ -129,6 +129,7 @@ const Chat_UI = () => {
   useEffect(() => {
     if (!roomId) return;
     socket.emit('join-room', roomId);
+    console.log('User joining the room!', roomId);
 
     handle_Load_Old_Chats(roomId);
     handle_CallLogs_display();
@@ -161,6 +162,8 @@ const Chat_UI = () => {
           }]);
 
         const myId = myProfile?.message?.data?.user_id;
+
+        console.log('User recives the msg = ', msg);
 
         if (myId && myId !== sender_id) {
           socket.emit('msg_seen_instantly', { msg_Id, room_id });
@@ -197,6 +200,7 @@ const Chat_UI = () => {
 
     //NEW - Handle of Un-seen Messages in Room 
     socket.on('update_seen_many', (msgIds : string[]) => {
+        console.log('update_seen_many received:', msgIds);
       if (!Array.isArray(msgIds)) return;
 
       setnewMessages((prev) => prev.map((m) => {
@@ -232,7 +236,7 @@ const Chat_UI = () => {
       socket.off('incomming-video-call');
     };
 
-  }, [socket, myProfile, setnewMessages, navigator]);
+  }, [socket, setnewMessages, navigator]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleLeaveChatRoom = () => {
         socket.emit('leave-room', roomId);
@@ -277,6 +281,7 @@ const Chat_UI = () => {
         };
 
         socket.emit('send-message', senderMsg);
+        console.log('User sent the msg = ',  userMessgae);
         setUserMessgae('');
     };
 

@@ -12,6 +12,7 @@ io.on("connection", async (socket : Socket) => {
     
     //1. Connect Socket
     const data = await sockets_connect(socket);
+    console.log('User Connected with sockets Id = ', socket.id);
 
     if (!data) {
         console.log("User not authenticated or no data");
@@ -25,6 +26,8 @@ io.on("connection", async (socket : Socket) => {
     socket.on('join-room', async (room_id : string) => {
 
         socket.join(room_id);
+        console.log('Socket joined room: ', socket.id, room_id);
+        
         const updatedIds = await handleSeen(socket, room_id); 
         //It will give all the seen msgs_Id when enetered in Room
 
@@ -36,6 +39,7 @@ io.on("connection", async (socket : Socket) => {
     
     //3.Leave Room 
     socket.on('leave-room' , (room_id) => {
+        console.log('User leaving the room = ', socket.id, room_id);
         socket.leave(room_id);        
     });
 
@@ -51,11 +55,11 @@ io.on("connection", async (socket : Socket) => {
 
     //6. send Messages , Msg Seen in Rooms & Reciver msg
     socket.on('send-message', async ({msg, msg_type, sender_id, room_id}) => {
-
         const res : any = await handle_Send_Msg(msg, msg_type, sender_id, room_id);
 
         if (res?.msg_Id) {
             io.to(room_id).emit('receive-msg', res.msg_Id, res.mesg, sender_id, room_id);
+            console.log('User sent the msg = ', socket.id, msg);
         };
     });
 

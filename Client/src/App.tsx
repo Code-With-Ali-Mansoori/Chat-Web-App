@@ -4,7 +4,7 @@ import User_Profile from "./components/User_Profile";
 import Pop from "./components/pop";
 import App_structure from "./pages/App_structure";
 import Chat_page from "./pages/Chat_page";
-import Protected_Route from "./components/Protected_Route";
+// import Protected_Route from "./components/Protected_Route";
 import { Routes, Route } from 'react-router-dom';
 import Welcome_msg from './components/Welcome_msg';
 import Mychats from './components/mychats';
@@ -25,7 +25,7 @@ const App = () => {
           <Route path='/user/login' element={<Auth_page/>} />
           <Route path='*' element={<PageNotFound/>} />  
 
-          <Route element={<Protected_Route/>}>
+          {/* <Route element={<Protected_Route/>}> */}
             <Route path='/profile/setup' element={<Profile_Setup_pg/>} />
             <Route path="/profile" element={<User_Profile />} /> 
             <Route path='/profile?username=:username&userId=:userId' element={<User_Profile/>} />
@@ -44,9 +44,9 @@ const App = () => {
               <Route path='call-history' element={<Call_history_pg/>} />
               <Route path={`user/search`} element={<Search_result/>} />
             </Route>
-          </Route>
-
-        </Routes>
+          {/* </Routes> */}
+          
+      </Routes>
 
       <Pop/>
       <Loader/>

@@ -32,7 +32,7 @@ export default function IncomingAudioCall() {
       
       // Wait a bit to ensure join-room is processed, then send accept
       setTimeout(() => {
-          socket.emit('accept-audio-call', roomId , myProfile?.message.data.public_Id ); //MineId 
+          socket.emit('accept-audio-call', roomId , myProfile?.message.data.user_id ); //MineId 
       }, 200);
       
       navigators(`/active-audio-call?roomId=${roomId}&Called-User-Id=${user_Id}`); //OtherUser

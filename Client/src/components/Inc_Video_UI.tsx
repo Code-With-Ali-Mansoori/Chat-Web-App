@@ -53,14 +53,14 @@ export default function IncomingVideoCall() {
   }, [navigators, socket, roomId, Other_UserData?.user_publicId, hanlde_Disconnect_Call]);
 
   const handle_Reject_Call = (roomId : string ) => {
-      socket.emit('reject-video-call', roomId , myProfile?.message.data.public_Id );
+      socket.emit('reject-video-call', roomId , myProfile?.message.data.user_id );
       // navigators(`/chat-room?roomId=${roomId}&otherUsPer-public_Id=${user_Id}`); //Other_Id 
       navigators(-1);
   };
 
   const handle_Accept_Call = ( roomId : string , user_Id : string ) => {
       setTimeout(() => {
-          socket.emit('accept-video-call', roomId , myProfile?.message.data.public_Id ); //MineId 
+          socket.emit('accept-video-call', roomId , myProfile?.message.data.user_id ); //MineId 
       }, 200);
       navigators(`/active-video-call?roomId=${roomId}&Called-User-Id=${user_Id}`); //OtherUser
   };
