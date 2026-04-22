@@ -16,6 +16,7 @@ export const app_route = express.Router();
 
 //Main App Routes
 app_route.get('/is/auth', authCheck ,(req, res) => {
+    console.log('User is Authenticated!')
     res.status(200).json('User is Authenticated!');
     return;
 });
