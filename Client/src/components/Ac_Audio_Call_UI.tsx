@@ -189,6 +189,11 @@ export default function AudioCallUI() {
       return;
     }
 
+    if (pc.signalingState !== "have-local-offer") {
+      console.warn("Signaling state is not 'have-local-offer'. Current state:", pc.signalingState);
+      return;
+    }
+
     await pc.setRemoteDescription(new RTCSessionDescription(answer)); // Store Callee Answer Remotely
     socket.emit('Audio-call-Connected', roomId);
   }, [socket]);
@@ -211,7 +216,6 @@ export default function AudioCallUI() {
       if (!isCallStartRef.current) {
         callEndTimeoutRef.current = window.setTimeout(() => {
           if (!isCallStartRef.current) {
-            console.log('Call Cut!');
             socket.emit('AudioCall-not-reached', roomId);
             navigators(`/chat-room?roomId=${roomId}&otherUser-public_Id=${Other_UserData?.user_publicId}`);
           }
@@ -231,7 +235,6 @@ export default function AudioCallUI() {
     socket.on('answered-audio-call', hanlde_Answered_AudioCall);
 
     socket.on('connected-audio-call', () => {
-      console.log('Audio Call Connected');
     });
 
     socket.on("ice-candidate2", async (candidate) => {

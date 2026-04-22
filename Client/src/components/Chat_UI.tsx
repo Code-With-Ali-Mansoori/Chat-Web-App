@@ -6,9 +6,10 @@ import { capitalizeFirstLetter } from "../helper/LetterFirst"
 import { getFileTypeCategory, validateFile } from "../helper/validateFile"
 import useOtherUser from "../Hooks/useOtherUser"
 import { useSocket } from "../Hooks/Sockets"
-import { useEffect, useState, type ChangeEvent } from "react"
+import { useCallback, useEffect, useState, type ChangeEvent } from "react"
 import useProfile_Hooks, { type UserProfile } from "../Hooks/Profile.Hook";
 import axios from "axios";
+import { useRef } from "react";
 import Image_msgs from "./Image_msg";
 import Video_msgs from "./Video_msgs";
 import File_msg from "./File_msg";
@@ -67,6 +68,7 @@ const Chat_UI = () => {
   const [fileValidationError, setFileValidationError] = useState<string | null>(null);
   const [fileValidationSuccess, setFileValidationSuccess] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState<boolean>(false);
+  const scrollRef = useRef<HTMLDivElement | null>(null);
 
   const navigator = useNavigate();
   const socket = useSocket();
@@ -81,10 +83,9 @@ const Chat_UI = () => {
   const { data : myProfile } = useProfile_Hooks();
 
   const handle_Load_Old_Chats = async (roomId : string) => {
-      const res = await axios.get(`https://chatsy-y2s8.onrender.com/chat-room/all_messages/${roomId}`,{withCredentials : true});
+      const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/chat-room/all_messages/${roomId}`,{withCredentials : true});
 
       if (res.status !== 200 || !Array.isArray(res.data.message)) {
-        console.log('No Msg-Data found!');
         return;
       };
 
@@ -126,28 +127,7 @@ const Chat_UI = () => {
       setnewMessages(loadedMessages);
   };
 
-  useEffect(() => {
-    if (!roomId) return;
-    socket.emit('join-room', roomId);
-    console.log('User joining the room!', roomId);
-
-    handle_Load_Old_Chats(roomId);
-    handle_CallLogs_display();
-
-    return () => {
-      socket.emit('leave-room', roomId);
-    };
-  }, [roomId, socket]);
-
-  useEffect(() => {
-    const handleUsersTyping = () => setIsTyping(true);
-    const handleStopTyping = () => setIsTyping(false);
-
-    socket.on('users-typing', handleUsersTyping);
-    socket.on('stop-typinggggg', handleStopTyping);
-
-    // Handle incoming message from server via sockets
-    socket.on('receive-msg', (msg_Id : string , msg: string, sender_id: string, room_id: string) => {
+  const hanlde_ReciveMsg = useCallback((msg_Id : string , msg: string, sender_id: string, room_id: string) => {
         
         setnewMessages((prev) => [...prev, 
           { msg_Id : msg_Id,
@@ -163,16 +143,24 @@ const Chat_UI = () => {
 
         const myId = myProfile?.message?.data?.user_id;
 
-        console.log('User recives the msg = ', msg);
-
         if (myId && myId !== sender_id) {
           socket.emit('msg_seen_instantly', { msg_Id, room_id });
         };
-      }
-    );
 
-    //Listen Media Hnadler
-    socket.on('receive-media', (msg_id, sender_Id, media_URL, media_Type, roomId) => {
+  },[socket, myProfile?.message?.data?.user_id]);
+
+  const handle_updateSeen_many = useCallback((msgIds : string[]) => {
+      if (!Array.isArray(msgIds)) return;
+      
+      setnewMessages((prev) => prev.map((m) => {
+        if (m.msg_Id && msgIds.map(id => String(id)).includes(String(m.msg_Id))) {
+          return { ...m, is_msgSeen: true };
+        }
+        return m;
+      }));
+  }, []);
+
+  const hanlde_reciveedMedia = useCallback((msg_id : string, sender_Id : string, media_URL : string, media_Type : 'file', roomId : string) => {
 
       // console.log(msg_id, sender_Id, media_URL, media_Type, roomId);
 
@@ -196,47 +184,55 @@ const Chat_UI = () => {
           socket.emit('msg_seen_instantly', { msg_Id: msg_id, room_id: roomId });
         };
       
-    });
+  }, [socket, myProfile?.message?.data?.user_id]);
+  
+
+  useEffect(() => {
+    if (!roomId) return;
+    socket.emit('join-room', roomId);
+
+    handle_Load_Old_Chats(roomId);
+    handle_CallLogs_display();
+
+    const handleUsersTyping = () => setIsTyping(true);
+    const handleStopTyping = () => setIsTyping(false);
+
+    socket.on('users-typing', handleUsersTyping);
+    socket.on('stop-typinggggg', handleStopTyping);
+
+    // Handle incoming message from server via sockets
+    socket.on('receive-msg', hanlde_ReciveMsg);
+
+    //Listen Media Hnadler
+    socket.on('receive-media', hanlde_reciveedMedia);
 
     //NEW - Handle of Un-seen Messages in Room 
-    socket.on('update_seen_many', (msgIds : string[]) => {
-        console.log('update_seen_many received:', msgIds);
-      if (!Array.isArray(msgIds)) return;
-
-      setnewMessages((prev) => prev.map((m) => {
-        if (m.msg_Id && msgIds.includes(m.msg_Id)) {
-          return { ...m, is_msgSeen: true };
-        }
-        return m;
-      }));
-    });
+    socket.on('update_seen_many', handle_updateSeen_many);
 
     //NEW - UPDATE UI FOR SEEN IN Staying in Room
     socket.on('update_seen', (msg_Id) => {
-      setnewMessages((prev) => prev.map((m) => (m.msg_Id === msg_Id ? { ...m, is_msgSeen: true } : m)));
-
-    });
-
-    socket.on('incomming-audio-call', (room_id, callerId) => {
-        navigator(`/incoming-audio-call/?roomId=${room_id}&Caller-User-Id=${callerId}`)
-    });
-
-    socket.on('incomming-video-call', (room_id, callerId) => {
-        navigator(`/incoming-video-call/?roomId=${room_id}&Caller-User-Id=${callerId}`);
+      setnewMessages((prev) => prev.map((m) => (String(m.msg_Id) === String(msg_Id) ? { ...m, is_msgSeen: true } : m)));
     });
 
     return () => {
       socket.off('users-typing', handleUsersTyping);
       socket.off('stop-typinggggg', handleStopTyping);
-      socket.off('receive-msg');
+      socket.off('receive-msg', hanlde_ReciveMsg);
       socket.off('update_seen');
-      socket.off('update_seen_many');
+      socket.off('update_seen_many', handle_updateSeen_many);
       socket.off('receive-media');
-      socket.off('incomming-audio-call');
-      socket.off('incomming-video-call');
+      socket.emit('leave-room', roomId);
     };
 
-  }, [socket, setnewMessages, navigator]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [socket, roomId, hanlde_ReciveMsg, hanlde_reciveedMedia, handle_updateSeen_many]);
+
+  useEffect(() => {
+    // Timeout helps ensure the DOM has updated before scrolling
+    const timer = setTimeout(() => {
+        scrollRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, 100);
+    return () => clearTimeout(timer);
+  }, [newMessages, isTyping]);
 
   const handleLeaveChatRoom = () => {
         socket.emit('leave-room', roomId);
@@ -281,7 +277,6 @@ const Chat_UI = () => {
         };
 
         socket.emit('send-message', senderMsg);
-        console.log('User sent the msg = ',  userMessgae);
         setUserMessgae('');
     };
 
@@ -329,7 +324,6 @@ const Chat_UI = () => {
     const handleMediaSending = async () => {
 
       if (!selectedFile || !myProfile?.message.data.user_id || !roomId) {
-        console.log("File OR UserId OR RoomId Not found!");
         return;
       };
 
@@ -341,7 +335,7 @@ const Chat_UI = () => {
         formData.append("senderId", myProfile?.message.data.user_id);
         formData.append("roomId", roomId);
 
-        const res = await axios.post('https://chatsy-y2s8.onrender.com/room/msgs/media', formData , {withCredentials : true});
+        const res = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/room/msgs/media`, formData , {withCredentials : true});
 
         if (res.status != 200) {
           setSelectedFile(null);
@@ -478,6 +472,9 @@ const Chat_UI = () => {
                     <span className="type-text">Typing...</span>
                 </div>
             </div>
+            
+            {/* Scroll Anchor */}
+            <div ref={scrollRef} />
             </div>
 
             {/* Emoji Picker */}

@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 
 const handle_UserLogout = async () => {
         try {
-            const res = await axios.delete('https://chatsy-y2s8.onrender.com/user/logout', {withCredentials : true});
+            const res = await axios.delete(`${import.meta.env.VITE_BACKEND_URL}/user/logout`, {withCredentials : true});
 
             if ( res.status === 200 ) {
                 return res.data;

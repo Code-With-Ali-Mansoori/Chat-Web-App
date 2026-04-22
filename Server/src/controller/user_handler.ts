@@ -68,7 +68,7 @@ try {
     return res.status(200).json({message : "Profile Setup Succesfully✅"});              
 
 } catch (error) {
-    console.log(error);
+    console.error('Error in profile_handler:', error);
     return res.status(500).json({message : 'Internal server error 🚨'});
 
 }};

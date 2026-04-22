@@ -227,7 +227,6 @@ export default function VideoCallUI() {
     pcRef.current = null;
     localStreamRef.current = null;
  
-    console.log('End Video Call');
   
     navigators(`/chat-room?roomId=${roomId}&otherUser-public_Id=${Other_UserData?.user_publicId}`);
   }, [navigators, Other_UserData?.user_publicId, clearCallEndTimeout,seconds, isCall_Start, callId, setCallId]);
@@ -272,6 +271,11 @@ export default function VideoCallUI() {
     }
 
     try {
+      if (pc.signalingState !== "have-local-offer") {
+        console.warn("Signaling state is not 'have-local-offer'. Current state:", pc.signalingState);
+        return;
+      }
+
       await pc.setRemoteDescription(new RTCSessionDescription(answer));
       isRemoteDescriptionSetRef.current = true;
       
@@ -314,7 +318,6 @@ export default function VideoCallUI() {
     if (!isCallStartRef.current) {
       callEndTimeoutRef.current = window.setTimeout(() => {
         if (!isCallStartRef.current) {
-          console.log('Call Cut!');
           socket.emit('VideoCall-not-reached', roomId, Other_UserData?.user_Id);
           navigators(`/chat-room?roomId=${roomId}&otherUser-public_Id=${Other_UserData?.user_publicId}`);
         }
@@ -337,7 +340,6 @@ export default function VideoCallUI() {
     socket.on('answered-video-call', hanlde_Answered_VideoCall);
 
     socket.on('connected-video-call', () => {
-      console.log('Video Call Happening...'); 
     });
 
     socket.on("ice-candidate-video", async (candidate) => {

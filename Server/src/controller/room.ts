@@ -74,7 +74,7 @@ try {
     });
         
 } catch (error) {
-    console.log(error);
+    console.error('Error in create_room_handler:', error);
     
     return res.status(500).json({
       message: "Error in Server"
@@ -126,7 +126,7 @@ try {
     return res.status(200).json({message : my_Rooms});
         
 } catch (error) {
-    console.log(error);
+    console.error('Error in search_my_rooms:', error);
     
     return res.status(500).json({
       message: "Error in Server"
@@ -141,14 +141,12 @@ export const specific_user = async (req : Request, res : Response) => {
         const public_Id = req.params.id as string;
 
         if (!public_Id) {
-            console.log('Erorr in 1st');
             return res.status(404).json({message : "User ID is required!"});
         };
 
         const user = await user_model.findOne({Public_user_id: public_Id});
 
         if (!user) {
-            console.log('Erorr in 2st');
             return res.status(404).json({message : "User not found in DB!"});
         };
         
@@ -176,12 +174,10 @@ try {
     const roomId = req.params.roomId;
 
     if (!roomId) {
-        console.log('Erorr in 1st');
         return res.status(404).json({message : 'Room ID is required in Parameter!'})
     };
 
     if (!users) {
-        console.log('Erorr in 1st');
         return res.status(401).json({message : 'User is Un-Authorized!'})
     };
 
@@ -221,7 +217,7 @@ try {
     return;
 
  } catch (error) {
-    console.log(error);
+    console.error('Error in EveryUserData:', error);
     res.status(500).json({'error' : error});
     return;
  
@@ -279,9 +275,8 @@ export const get_Old_Msgs = async (req : Request, res : Response) => {
         return;
         
     } catch (error) {
-        console.log(error);
+        console.error('Error in get_Old_Msgs:', error);
         return res.status(500).json({message : error})
-         
     };
 };
 
@@ -321,7 +316,7 @@ try {
 
     //3. Return that store data to res
     const data = {
-        msg_id : mediaDB._id,
+        msg_id : mediaDB._id.toString(),
         roomId : mediaDB.room_id,
         senderId : mediaDB.sender_id,
         mediaURL : mediaDB.media?.media_url
@@ -330,7 +325,7 @@ try {
     return res.status(200).json({message : 'Media Store in Backend', data: data});
         
 } catch (error) {
-    console.log('0987654',error);
+    console.error('Error in handleMedia_msgs:', error);
     return res.status(500).json({message : 'Erorr in Media_Msg Controller'});
     
 }};

@@ -17,7 +17,7 @@ type T = {
 export const sockets_connect = async (socket : Socket) : Promise<dataType | null> => {
 try {
     const userId = socket.data.user.userId;    
-    const userDB = await user_model.findById({_id : userId });  
+    const userDB = await user_model.findById(userId);  
 
     if (!userDB) { 
         socket.disconnect();
@@ -35,9 +35,7 @@ try {
 
 } catch (error) {
     socket.disconnect();
-    console.log('User disconnected!');
     return null;
-
 }};
 
 export const hanlde_otherUserId = async (call_id : string, calleeId : string) : Promise<string | null> => {
@@ -46,7 +44,6 @@ try {
     const call_data = await call_model.findById(call_id);
 
     if ( !call_data) { 
-        console.log('Something we not found!', call_data);
         return null;
     };
 
@@ -62,7 +59,7 @@ try {
     };
         
 } catch (error) {
-    console.log('Error in hanlde_otherUserId', error);
+    console.error('Error in hanlde_otherUserId', error);
     return null;
     
 }};
@@ -86,14 +83,14 @@ export const disconnect_socket = async (socket : Socket) => {
 try {
     const userId = socket.data.user.userId;
 
-    const userDB = await user_model.findById({_id : userId });    
-    await user_model.findByIdAndUpdate({_id : userId}, { Active_Status: false });
+    const userDB = await user_model.findById(userId);    
+    await user_model.findByIdAndUpdate(userId, { Active_Status: false });
         
     socket.disconnect();
     return;
 
 } catch (error) {
-    console.log(error);
+    console.error(error);
     throw new Error("Erorr in Disconnect Handler");  
 
 }};
@@ -101,7 +98,7 @@ try {
 export const handle_Send_Msg = async ( msg : any, msg_type : any, sender_id: any, room_id : any ) => {
 try {
     
-    const our_room = await room_model.findById({_id : room_id});
+    const our_room = await room_model.findById(room_id);
 
     if (!our_room) {
         throw new Error('Room not found!');  
@@ -118,15 +115,14 @@ try {
         msg_type : msg_type 
     });
 
-    await room_model.findByIdAndUpdate({_id : room_id}, {
+    await room_model.findByIdAndUpdate(room_id, {
         last_Msg: store_msg._id
     }, { new: true });
 
-    return {msg_Id : store_msg._id, mesg : msg};
+    return {msg_Id : store_msg._id.toString(), mesg : msg};
 
 } catch (error) {
-    console.log(error);
-    console.log('Erorr in Send-Message Logic in Sockets!');
+    console.error('Error in Send-Message Logic in Sockets!', error);
     return;
 }};
 
@@ -164,22 +160,17 @@ export const handleSeen = async (socket : Socket, room_id : any) => {
 export const instantMsg_Seen = async (  msg_Id : string, socket : any) => {
     try {
         if ( !msg_Id ) {
-            return console.log('Required all fields for Instant Msg_Seen Feature');
+            return;
         };
 
         const myId = socket.data.user.userId;
         await message_model.findOneAndUpdate({_id : msg_Id}, { $set: { msg_seenBy: myId } });
 
     } catch (error) {
-        console.log(error);
+        console.error(error);
         return
-    }    
-};  
-
-// export const handle_reciver_msg = async (room_id : any) => {
-// try {
-
-//     if (!room_id) return console.log('Msg_Room Id Not Found!');
+    } 
+};   
     
 //     const all_msg_data = await message_model.find({room_id :room_id});
 

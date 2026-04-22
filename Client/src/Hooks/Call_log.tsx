@@ -11,7 +11,7 @@ interface calls_type {
 const useCall_log = () => {
 
     const handle_callLogs = async ({caller_id, callee_id, room_id, call_type} : calls_type) => {
-        const res = await axios.post('https://chatsy-y2s8.onrender.com/create/call-history/data', 
+        const res = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/create/call-history/data`, 
         { caller_id, callee_id, room_id, call_type },
         { withCredentials : true });
 

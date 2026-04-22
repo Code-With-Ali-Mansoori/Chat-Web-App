@@ -9,7 +9,6 @@ try {
     const cookieHeader = socket.handshake.headers.cookie;
     
     if (!cookieHeader) {
-      console.log("No cookies found");
       return socket.disconnect();
     }
 
@@ -21,14 +20,12 @@ try {
     const token = cookies.token; 
     
     if (!token) {
-      console.log("No Token found");
       return socket.disconnect()
     };
 
     const decoded  = jwt.verify(token, process.env.JWT_SECRET as string) as AuthPayload
         
     if ( !decoded ) {
-        console.log("No Data found");
         return socket.disconnect();        
     };
 

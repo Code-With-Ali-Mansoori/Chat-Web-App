@@ -13,6 +13,7 @@ const SocketProvider = ({children} : appType) => {
 
   useEffect(() => { 
         socket.connect();
+        console.log('User connected with Socket in sp.tsx');
 
         socket.on('incomming-audio-call', (room_id, callerId) => {
           // socket.emit('join-room', room_id);

@@ -21,7 +21,7 @@ export interface ApiResponse {
 
 const profile_function = async () : Promise<ApiResponse> => {
     try {
-        const res = await axios.get<ApiResponse>('https://chatsy-y2s8.onrender.com/user/profile', {withCredentials : true});
+        const res = await axios.get<ApiResponse>(`${import.meta.env.VITE_BACKEND_URL}/user/profile`, {withCredentials : true});
                 
         return res.data;
 
@@ -33,7 +33,7 @@ const profile_function = async () : Promise<ApiResponse> => {
 
 const auth_check_function = async (): Promise<string> => {
     try {
-        const res = await axios.get<string>('https://chatsy-y2s8.onrender.com/is/auth', {withCredentials: true});
+        const res = await axios.get<string>(`${import.meta.env.VITE_BACKEND_URL}/is/auth`, {withCredentials: true});
         return res.data;
     } catch (error) {
         console.log(error);
