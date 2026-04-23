@@ -49,11 +49,25 @@ export const handleOAuth = async (req : Request, res : Response) => {
         isProfileCompleted : false,
         username : randomUsername
       });
-  
-      return res.redirect('http://localhost:5173/profile/setup');  //redirect to Profile-Setup page
-    };;;
 
-    return res.redirect('http://localhost:5173');
+      // process.env.CLIENT_URL
+      const clientURL = process.env.CLIENT_URL;
+
+      if (!clientURL) {
+        throw new Error("CLIENT_URL not defined");
+      };
+
+      const base = clientURL.replace(/\/$/, ""); //Removes slash / from the end of a URL
+      return res.redirect(`${base}/profile/setup`); // Redirect to Profile-Setup page
+      };
+
+    const clientURL = process.env.CLIENT_URL;
+
+    if (!clientURL) {
+      throw new Error("CLIENT_URL not defined");
+    };
+
+    return res.redirect(clientURL);
 
     } catch (error) {
       console.log("Error : ", error);
