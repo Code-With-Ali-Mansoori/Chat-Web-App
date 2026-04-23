@@ -66,7 +66,7 @@ export default function IncomingVideoCall() {
   };
 
   return (
-    <div className="h-screen w-full bg-black text-white flex flex-col justify-between overflow-hidden relative">
+    <div className="h-dvh w-full bg-black text-white flex flex-col justify-between overflow-hidden relative">
 
       {/* 🎥 BACKGROUND (Remote Preview / Placeholder) */}
       <div className="absolute inset-0 bg-gray-900 flex items-center justify-center">

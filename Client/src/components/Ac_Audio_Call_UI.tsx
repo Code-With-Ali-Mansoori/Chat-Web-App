@@ -304,7 +304,7 @@ export default function AudioCallUI() {
   };
 
   return (
-    <div className="h-screen w-full bg-[#242323] flex flex-col justify-between text-white overflow-hidden">
+    <div className="h-dvh w-full bg-[#242323] flex flex-col justify-between text-white overflow-hidden">
 
       {/* 🔵 MAIN */}
       <div className="flex flex-col items-center justify-center flex-1 gap-4">

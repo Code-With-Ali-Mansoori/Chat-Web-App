@@ -72,7 +72,7 @@ export default function IncomingAudioCall() {
     }, [navigators, socket, roomId, Other_UserData?.user_publicId, hanlde_Disconnect_Call]);
 
   return (
-    <div className="h-screen w-full bg-[#242323] flex flex-col justify-between text-white overflow-hidden">
+    <div className="h-dvh w-full bg-[#242323] flex flex-col justify-between text-white overflow-hidden">
 
       {/* 🔵 MAIN */}
       <div className="flex flex-col items-center justify-center flex-1 gap-4">

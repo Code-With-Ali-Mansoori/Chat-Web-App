@@ -34,8 +34,7 @@ const Call_logs = ({logs} : Props) => {
     
     useEffect(() => {   
         fetchUserData();
-        console.log('Checking => ',userData);
-    }, [fetchUserData, userData]);
+    }, [fetchUserData]);
   
 
     // Determine if this is an incoming or outgoing call

@@ -396,8 +396,8 @@ const Chat_UI = () => {
   };
 
   // (listener moved to useEffect to prevent duplicate registrations)
-  return (<div id={roomId as string} className="h-full w-full relative ">
-    <div className="border-b border-gray-400 flex justify- items-center gap-1 py-3 px-2">
+  return (<div id={roomId as string} className="h-dvh w-full relative flex flex-col">
+    <div className="border-b border-gray-400 flex shrink-0 justify- items-center gap-1 py-3 px-2">
 
       <div onClick={() => { handleLeaveChatRoom() }} className="w-fit hover:cursor-pointer"><ChevronLeft strokeWidth={1.5} /></div>
 
@@ -439,7 +439,7 @@ const Chat_UI = () => {
       </div>
     </div>
 
-    <div className="h-4/5 relative z-1 1 p-3 border-b border-gray-400 chat-scroll2 overflow-y-scroll overflow-x-hidden">
+    <div className="flex-1 relative z-1 1 p-3 border-b border-gray-400 chat-scroll2 overflow-y-scroll overflow-x-hidden">
 
       {/* All Messgaes */}
       <div>
@@ -515,7 +515,7 @@ const Chat_UI = () => {
     </div>
 
 
-    <div className=" pt h-fit w-full relative">
+    <div className="pt-2 pb-4 h-fit w-full relative shrink-0">
 
       <div className="h-12 pt-3 border-gray-400 rounded-2xl gap-2 px-3 flex justify-evenly items-center mx-2">
 

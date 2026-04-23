@@ -419,7 +419,7 @@ export default function VideoCallUI() {
   };
 
   return (
-    <div className="h-screen w-full bg-[#2f3147] flex flex-col text-white overflow-hidden">
+    <div className="h-dvh w-full bg-[#2f3147] flex flex-col text-white overflow-hidden">
 
       {/* 🔷 HEADER */}
       <div className="flex items-center justify-between px-4 sm:px-6 py-3 bg-[#545454]">
