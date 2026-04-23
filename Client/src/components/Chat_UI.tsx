@@ -403,12 +403,11 @@ const Chat_UI = () => {
   };
 
   // (listener moved to useEffect to prevent duplicate registrations)
-  return (<div id={roomId as string} className="h-full w-full relative flex flex-col overflow-hidden bg-white">
+  return (<div id={roomId as string} className="fixed inset-0 md:relative md:h-full w-full flex flex-col overflow-hidden bg-white z-50 md:z-0">
     <div className="border-b border-gray-400 flex shrink-0 justify-between items-center gap-1 py-3 px-2 z-10 bg-white sticky top-0">
+      <div onClick={() => { handleLeaveChatRoom() }} className="w-fit hover:cursor-pointer p-1"><ChevronLeft strokeWidth={1.5} /></div>
 
-      <div onClick={() => { handleLeaveChatRoom() }} className="w-fit hover:cursor-pointer"><ChevronLeft strokeWidth={1.5} /></div>
-
-      <div onClick={() => { navigator(`/profile?username=${Other_UserData?.username}&userId=${Other_UserData?.user_publicId}`) }} className="flex items-center  gap-2 w-4/5">
+      <div onClick={() => { navigator(`/profile?username=${Other_UserData?.username}&userId=${Other_UserData?.user_publicId}`) }} className="flex items-center gap-2 flex-1">
         <div className="h-10 w-10">
           <img className="w-full rounded-full hover:cursor-pointer h-full" src={Other_UserData?.userAvatar} alt="user_profile_img" />
         </div>
@@ -522,9 +521,8 @@ const Chat_UI = () => {
     </div>
 
 
-    <div className="pt-2 pb-4 h-fit w-full relative shrink-0">
-
-      <div className="h-12 pt-3 border-gray-400 rounded-2xl gap-2 px-3 flex justify-evenly items-center mx-2">
+    <div className="pt-2 pb-2 h-fit w-full relative shrink-0 bg-white border-t border-gray-300">
+      <div className="h-12 pt-1 border-gray-400 rounded-2xl gap-2 px-3 flex justify-evenly items-center mx-2">
 
         <div onClick={() => SetIsEmoji_Click(!isEmoji_Click)} className={`"hover:cursor-pointer" ${isEmoji_Click ? "text-gray-700 border-b-2 border-b-gray-600 pb-1" : "text-gray-500"}`}>
           <SmilePlus strokeWidth={1.25} />
