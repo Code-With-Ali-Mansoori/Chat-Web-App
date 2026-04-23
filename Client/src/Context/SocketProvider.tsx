@@ -13,15 +13,12 @@ const SocketProvider = ({children} : appType) => {
 
   useEffect(() => { 
         socket.connect();
-        console.log('User connected with Socket in sp.tsx');
 
-        socket.on('incomming-audio-call', (room_id, callerId) => {
-          // socket.emit('join-room', room_id);
+        socket.on('incomming-audio-call', (room_id, callerId) => {          
           navigator(`/incoming-audio-call/?roomId=${room_id}&Caller-User-Id=${callerId}`)
         });
 
         socket.on('incomming-video-call', (room_id, callerId) => {
-          // socket.emit('join-room', room_id);
           navigator(`/incoming-video-call/?roomId=${room_id}&Caller-User-Id=${callerId}`);
         });
 
@@ -31,7 +28,7 @@ const SocketProvider = ({children} : appType) => {
           socket.off('incomming-video-call');
         };
         
-  }, [navigator]);
+  }, []); // Empty dependency array ensures this only runs once on mount
 
   return (
     <socketContext.Provider value={socket}>

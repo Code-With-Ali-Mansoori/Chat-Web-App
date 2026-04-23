@@ -11,7 +11,6 @@ const handle_UserLogout = async () => {
             };
 
         } catch (error) {
-            console.log(error);
             throw error;
         }
    };

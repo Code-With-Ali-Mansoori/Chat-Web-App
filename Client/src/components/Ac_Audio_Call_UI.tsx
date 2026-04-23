@@ -67,7 +67,7 @@ export default function AudioCallUI() {
     // ❄️ ICE => 2 users ke beech best possible network path find karna
     pc.onicecandidate = (event) => {
       if (event.candidate) {
-        socket.emit("ice-candidate", event.candidate, roomId);
+        socket.emit("ice-candidate", event.candidate, roomId, Other_UserData?.userId);
       }
     };
 
@@ -123,11 +123,10 @@ export default function AudioCallUI() {
   [navigators, clearCallEndTimeout, seconds, isCall_Start, callId, setCallId, Other_UserData?.user_publicId]);
 
 
-  //Callee Accept the Call, Caller will get event and he will create Offer as well as Sending to Callee
   const handle_Accpeted_AudioCall = useCallback(async (roomId: string, reciverId: string) => {
 
-    if (!myProfile?.message.data.public_Id) {
-      console.warn('❌ Profile not loaded yet, retrying...');
+    if (!myProfile?.message.data.user_id || !Other_UserData?.userId) {
+      console.warn('❌ Profile or Other_UserData not loaded yet, retrying...');
       setTimeout(() => handle_Accpeted_AudioCall(roomId, reciverId), 500);
       return;
     }
@@ -145,47 +144,47 @@ export default function AudioCallUI() {
 
     const Pc = await createPC(); //TURN Server Req For Connection
 
-    if ( reciverId !== myProfile?.message.data.public_Id ) {
+    if ( reciverId !== myProfile?.message.data.user_id ) {
+      try {
+        const offer = await Pc.createOffer(); //Create SDP offer
+        await Pc.setLocalDescription(offer); // Store Offer Locally
 
-      const offer = await Pc.createOffer(); //Create SDP offer
-      await Pc.setLocalDescription(offer); // Store Offer Locally
-
-      isOfferSetRef.current = true; // ✅ mark ready
-      socket.emit('audio-call-offer', offer, roomId); //Signaling and Send offer to Callee
-
+        isOfferSetRef.current = true; // ✅ mark ready
+        socket.emit('audio-call-offer', offer, roomId, Other_UserData?.userId); //Signaling and Send offer to Callee
+      } catch (e) {
+        console.error("Error creating/setting audio offer:", e);
+      }
     };
 
-  }, [myProfile?.message.data.public_Id, createPC, socket, clearCallEndTimeout]);
+  }, [myProfile?.message.data.user_id, createPC, socket, clearCallEndTimeout, Other_UserData?.userId]);
 
 
-  //Callee will get the offer and here sends Answer to Caller 
   const handle_Offer_AudioCall = useCallback(async (offer: RTCSessionDescriptionInit, roomId: string) => {
 
     const pc = await createPC(); // Using same WebRTC connection
-    await pc.setRemoteDescription(new RTCSessionDescription(offer)); // Store Caller Offer Remotely
+    if (pc.signalingState !== "stable") return;
 
-    const answer = await pc.createAnswer(); // Create Answer
-    await pc.setLocalDescription(answer); // Store Remotely
+    try {
+      await pc.setRemoteDescription(new RTCSessionDescription(offer)); // Store Caller Offer Remotely
 
-    socket.emit("answer-audio-call", answer, roomId); //Signaling and Sharing with Caller
-  }, [createPC, socket]);
+      const answer = await pc.createAnswer(); // Create Answer
+      await pc.setLocalDescription(answer); // Store Remotely
+
+      socket.emit("answer-audio-call", answer, roomId, Other_UserData?.userId); //Signaling and Sharing with Caller
+    } catch (e) {
+      console.error("Error handling audio offer:", e);
+    }
+  }, [createPC, socket, Other_UserData?.userId]);
 
 
-  //Caller will listen and store answer, also signalling for Acknowledgement
   const hanlde_Answered_AudioCall = useCallback(async (answer: RTCSessionDescriptionInit, roomId: string) => {
     const pc = pcRef.current;
-    if (!pc) {
-      console.error('❌ PeerConnection not initialized when receiving answer');
-      return;
-    }
+    if (!pc) return;
 
-    // ❗ Wait until offer is set
-    if (!isOfferSetRef.current) {
-      console.warn("⏳ Offer not ready yet, delaying answer...");
-      setTimeout(() => {
-        socket.emit("answer-audio-call", answer, roomId);
-        console.log('🔄 Again Signalling...');
-      }, 100);
+    // ❗ RACE CONDITION: If answer arrives before setLocalDescription(offer) finishes
+    if (!isOfferSetRef.current || pc.signalingState === "stable") {
+      console.warn("⏳ Audio answer arrived but offer not yet set. Retrying...");
+      setTimeout(() => hanlde_Answered_AudioCall(answer, roomId), 200);
       return;
     }
 
@@ -194,19 +193,20 @@ export default function AudioCallUI() {
       return;
     }
 
-    await pc.setRemoteDescription(new RTCSessionDescription(answer)); // Store Callee Answer Remotely
-    socket.emit('Audio-call-Connected', roomId);
-  }, [socket]);
+    try {
+      await pc.setRemoteDescription(new RTCSessionDescription(answer)); // Store Callee Answer Remotely
+      socket.emit('Audio-call-Connected', roomId, Other_UserData?.userId);
+    } catch (e) {
+      console.error("Error handling audio answer:", e);
+    }
+  }, [socket, Other_UserData?.userId]);
 
   const hanlde_Disconnect_Call = useCallback(() => {
-      
       alert('⚠️ Network has Interupted');
-    
       setTimeout(() => {
           navigators(`/chat-room?roomId=${roomId}&otherUser-public_Id=${Other_UserData?.user_publicId}`);
           socket.emit('disconnect-the-call', roomId);
       }, 2000);
-      
     }, [Other_UserData?.user_publicId, navigators, roomId, socket]);
 
 
@@ -216,12 +216,12 @@ export default function AudioCallUI() {
       if (!isCallStartRef.current) {
         callEndTimeoutRef.current = window.setTimeout(() => {
           if (!isCallStartRef.current) {
-            socket.emit('AudioCall-not-reached', roomId);
+            socket.emit('AudioCall-not-reached', roomId, Other_UserData?.userId);
             navigators(`/chat-room?roomId=${roomId}&otherUser-public_Id=${Other_UserData?.user_publicId}`);
           }
-        }, 10000);
+        }, 15000);
       }
-    }, [navigators, Other_UserData?.user_publicId, socket, clearCallEndTimeout]);
+    }, [navigators, Other_UserData?.user_publicId, Other_UserData?.userId, socket, clearCallEndTimeout]);
 
 
   useEffect(() => {
@@ -234,22 +234,18 @@ export default function AudioCallUI() {
     socket.on('Offer-audio-call', handle_Offer_AudioCall);
     socket.on('answered-audio-call', hanlde_Answered_AudioCall);
 
-    socket.on('connected-audio-call', () => {
-    });
-
     socket.on("ice-candidate2", async (candidate) => {
         if (pcRef.current && candidate) {
-        await pcRef.current.addIceCandidate(candidate)}
+          try {
+            await pcRef.current.addIceCandidate(new RTCIceCandidate(candidate))
+          } catch (e) {
+            console.warn("Error adding ICE candidate:", e);
+          }
+        }
     });
 
-    socket.on('muted-audio', () => {
-        setIsOtherMuted(true);
-    });
-
-    socket.on('unmuted-audio', () => {
-        setIsOtherMuted(false);
-    });
-
+    socket.on('muted-audio', () => setIsOtherMuted(true));
+    socket.on('unmuted-audio', () => setIsOtherMuted(false));
     socket.on('disconnect-the-call', hanlde_Disconnect_Call);
 
     return () => {
@@ -259,14 +255,13 @@ export default function AudioCallUI() {
       socket.off('audio-call-accepted', handle_Accpeted_AudioCall);
       socket.off('Offer-audio-call', handle_Offer_AudioCall);
       socket.off('answered-audio-call', hanlde_Answered_AudioCall);
-      socket.off('Audio-call-Connected');
       socket.off('muted-audio');
       socket.off('unmuted-audio');
       socket.off('ice-candidate2');
-      socket.off('connected-audio-call');
       socket.off('disconnect-the-call', hanlde_Disconnect_Call);
     };
   }, [socket, roomId, handle_Reject_AudioCall, handle_End_AudioCall, handle_Accpeted_AudioCall, handle_Offer_AudioCall, hanlde_Answered_AudioCall, hanlde_Disconnect_Call, handle_CallENDUp_Timer, clearCallEndTimeout]);
+
 
   // Cleanup interval on unmount
   useEffect(() => {

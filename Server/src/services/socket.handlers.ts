@@ -38,25 +38,17 @@ try {
     return null;
 }};
 
-export const hanlde_otherUserId = async (call_id : string, calleeId : string) : Promise<string | null> => {
+export const hanlde_otherUserId = async (call_id : string, callee_UserId : string) : Promise<string | null> => {
 try {
-
     const call_data = await call_model.findById(call_id);
+    if (!call_data) return null;
 
-    if ( !call_data) { 
-        return null;
-    };
+    // Return the ID that is NOT the currentUserId
+    const callee = call_data.caller_id.toString() !== callee_UserId 
+        ? call_data.callee_id.toString() 
+        : call_data.caller_id.toString();
 
-    if ( call_data?.caller_id.toString() !== calleeId) {
-        return call_data?.callee_id.toString();
-
-    } else if ( call_data?.callee_id.toString() === calleeId ) {
-        return call_data?.callee_id.toString();
-
-    } else {
-        return 'No userId is mathced!';
-
-    };
+    return callee;
         
 } catch (error) {
     console.error('Error in hanlde_otherUserId', error);
@@ -88,7 +80,6 @@ try {
         
     socket.disconnect();
     return;
-
 } catch (error) {
     console.error(error);
     throw new Error("Erorr in Disconnect Handler");  

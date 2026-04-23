@@ -162,7 +162,7 @@ export const specific_user = async (req : Request, res : Response) => {
         return;
         
     } catch (error) {
-        console.log(error);
+        console.error(error);
         return res.status(500).json({message : "Error in Search Api", error});
 
     }

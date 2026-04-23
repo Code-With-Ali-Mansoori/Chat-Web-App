@@ -1,6 +1,7 @@
 import { Phone , House, MessageCircleMore, Power } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useLogout } from "../Hooks/Logout.Hook";
+import App_Logo from "../assets/image copy.png";
 
 const Side_Bar = () => {
 
@@ -13,7 +14,7 @@ const Side_Bar = () => {
 
                 <div className='flex flex-col gap-14 justify-between items-center'>
                     <div onClick={() => {navigator('/')}} className=' bg-white'>
-                        <img className='rounded border-gray-100' src='/public/image copy.png' alt="App logo" />
+                        <img className='rounded border-gray-100' src={App_Logo} alt="App logo" />
                     </div>
 
                     <div className='flex border-b-2 border-gray-400 pb-4 flex-col gap-7 justify-between items-center'>
