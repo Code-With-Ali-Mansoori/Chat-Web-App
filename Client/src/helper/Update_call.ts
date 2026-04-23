@@ -24,8 +24,11 @@ export const handle_CallLogs_display = async () => {
     
     const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/get/call-history/data`, {withCredentials : true });
 
-    if (res.status === 200 && res.statusText === 'OK') {
+    console.log(res.data.message);
 
+    if (res.status === 200 && res.statusText === 'OK') {
+        
+        console.log(res.data.message);
         return res.data.message.map((d : CallHistory) => ({
             _id : d._id!,
             caller_id : d.caller_id!,
@@ -47,6 +50,5 @@ export const handle_CallLogs_display = async () => {
 export const handle_Called_UserData = async (user_Id : string ) => {
     const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/call-history/indiv/${user_Id}`, 
     {withCredentials : true });
-
     return res.data.message ;
 };
