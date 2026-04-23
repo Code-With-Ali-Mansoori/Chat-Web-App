@@ -34,7 +34,7 @@ const Call_logs = ({logs} : Props) => {
     
     useEffect(() => {   
         fetchUserData();
-        console.log(userData);
+        console.log('Checking => ',userData);
     }, [fetchUserData, userData]);
   
 

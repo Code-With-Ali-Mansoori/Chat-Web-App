@@ -24,10 +24,10 @@ export const handle_CallLogs_display = async () => {
     
     const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/get/call-history/data`, {withCredentials : true });
 
-    console.log(res.data.message);
+    // console.log(res.data.message);
 
     if (res.status === 200 && res.statusText === 'OK') {
-        
+
         console.log(res.data.message);
         return res.data.message.map((d : CallHistory) => ({
             _id : d._id!,
