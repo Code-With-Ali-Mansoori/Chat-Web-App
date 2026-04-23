@@ -213,6 +213,12 @@ const Chat_UI = () => {
       setnewMessages((prev) => prev.map((m) => (String(m.msg_Id) === String(msg_Id) ? { ...m, is_msgSeen: true } : m)));
     });
 
+    // Scroll to bottom on resize (e.g. keyboard open)
+    const handleResize = () => {
+      scrollRef.current?.scrollIntoView({ behavior: "smooth" });
+    };
+    window.addEventListener('resize', handleResize);
+
     return () => {
       socket.off('users-typing', handleUsersTyping);
       socket.off('stop-typinggggg', handleStopTyping);
@@ -221,6 +227,7 @@ const Chat_UI = () => {
       socket.off('update_seen_many', handle_updateSeen_many);
       socket.off('receive-media');
       socket.emit('leave-room', roomId);
+      window.removeEventListener('resize', handleResize);
     };
 
   }, [socket, roomId, hanlde_ReciveMsg, hanlde_reciveedMedia, handle_updateSeen_many]);
@@ -396,8 +403,8 @@ const Chat_UI = () => {
   };
 
   // (listener moved to useEffect to prevent duplicate registrations)
-  return (<div id={roomId as string} className="h-dvh w-full relative flex flex-col">
-    <div className="border-b border-gray-400 flex shrink-0 justify- items-center gap-1 py-3 px-2">
+  return (<div id={roomId as string} className="h-full w-full relative flex flex-col overflow-hidden bg-white">
+    <div className="border-b border-gray-400 flex shrink-0 justify-between items-center gap-1 py-3 px-2 z-10 bg-white sticky top-0">
 
       <div onClick={() => { handleLeaveChatRoom() }} className="w-fit hover:cursor-pointer"><ChevronLeft strokeWidth={1.5} /></div>
 

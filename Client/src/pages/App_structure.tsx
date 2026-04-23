@@ -8,7 +8,7 @@ import { Outlet } from 'react-router-dom';
 const App_structure = () => {
 
   return (
-    <div className="flex relative w-full h-dvh p-1">
+    <div className="flex relative w-full h-dvh p-1 overflow-hidden">
         {/* Left Menu Bar */}
         <Side_Bar/>
 

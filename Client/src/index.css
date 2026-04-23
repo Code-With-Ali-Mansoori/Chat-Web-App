@@ -1,5 +1,13 @@
 @import "tailwindcss";
 
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
 /* .avatar {
   background-image: url("https://tse1.mm.bing.net/th/id/OIP.Sdwk-7MkBK1c_ap_eGCwxwHaHa?pid=Api&P=0&h=180");
   background-size: cover;

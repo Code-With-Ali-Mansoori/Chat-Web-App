@@ -26,8 +26,6 @@ export const handle_CallLogs_display = async () => {
     // console.log(res.data.message);
 
     if (res.status === 200) {
-
-        console.log(res.data.message);
         return res.data.message.map((d : CallHistory) => ({
             _id : d._id!,
             caller_id : d.caller_id!,

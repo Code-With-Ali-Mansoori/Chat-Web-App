@@ -4,13 +4,13 @@ import Side_Bar from "../components/Side_Bar"
 
 const Chat_page = () => {
   return (
-    <div className="flex p-1 h-full w-full">
+    <div className="flex h-dvh w-full overflow-hidden">
          <Side_Bar/>
-         <div className="flex w-full h-full">
-            <div className=" md:w-1/3 hidden md:inline">
+         <div className="flex w-full h-full overflow-hidden">
+            <div className=" md:w-1/3 hidden md:inline h-full">
                 <Left_chatUi/>
             </div>
-            <div className=" md:border-l border-gray-500 w-3/3 md:w-2/3">
+            <div className=" md:border-l border-gray-500 w-full md:w-2/3 h-full">
                 <Chat_UI/>
             </div>
          </div>

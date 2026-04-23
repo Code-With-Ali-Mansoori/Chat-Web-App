@@ -19,7 +19,7 @@ import Call_history_pg from './components/Call_history_pg';
 
 const App = () => {
   return (
-    <div className='h-dvh relative'>
+    <div className='h-dvh relative overflow-hidden'>
 
         <Routes>
           <Route path='/user/login' element={<Auth_page/>} />
