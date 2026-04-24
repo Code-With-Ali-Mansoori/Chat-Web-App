@@ -10,13 +10,13 @@ import SocketProvider from './Context/SocketProvider.tsx';
 const queryClient = new QueryClient();
 
 createRoot(document.getElementById('root')!).render(
-        <BrowserRouter> 
+        <BrowserRouter>
             <QueryClientProvider client={queryClient}>
-                <SocketProvider>
-                    <ContextHanlder_Function>
-                        <App /> 
-                    </ContextHanlder_Function>
-                </SocketProvider>
+                <ContextHanlder_Function>
+                    <SocketProvider>
+                        <App />
+                    </SocketProvider>
+                </ContextHanlder_Function>
             </QueryClientProvider>
         </BrowserRouter>
 )

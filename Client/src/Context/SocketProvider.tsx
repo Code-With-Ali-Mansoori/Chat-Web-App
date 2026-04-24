@@ -2,6 +2,7 @@ import { useEffect, type ReactNode } from "react"
 import socketContext from "./Socket_Context"
 import socket  from "./Socket";
 import { useNavigate } from "react-router-dom";
+import useSearch from "../Hooks/SearchContext.hook";
 
 interface appType {
     children : ReactNode;
@@ -10,25 +11,29 @@ interface appType {
 const SocketProvider = ({children} : appType) => {
 
   const navigator = useNavigate();
+  const { setIsCallActive } = useSearch();
 
-  useEffect(() => { 
+  useEffect(() => {
         socket.connect();
 
-        socket.on('incomming-audio-call', (room_id, callerId) => {          
+        socket.on('incomming-audio-call', (room_id, callerId) => {
+          setIsCallActive(true);
           navigator(`/incoming-audio-call/?roomId=${room_id}&Caller-User-Id=${callerId}`)
         });
 
         socket.on('incomming-video-call', (room_id, callerId) => {
+          setIsCallActive(true);
           navigator(`/incoming-video-call/?roomId=${room_id}&Caller-User-Id=${callerId}`);
         });
 
-        return () => { 
+        return () => {
           socket.disconnect();
           socket.off('incomming-audio-call');
           socket.off('incomming-video-call');
         };
-        
-  }, []); // Empty dependency array ensures this only runs once on mount
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <socketContext.Provider value={socket}>

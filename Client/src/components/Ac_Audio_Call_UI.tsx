@@ -14,7 +14,7 @@ export default function AudioCallUI() {
   const [isOtherMuted, setIsOtherMuted] = useState<boolean>(false);
   const [isCall_Start, setIsCall_Start] = useState<boolean>(false);
 
-  const {callId, setCallId} = useSearch();
+  const {callId, setCallId, setIsCallActive} = useSearch();
   const socket = useSocket();
   useUnloadWarning();  
 
@@ -76,7 +76,7 @@ export default function AudioCallUI() {
   }
 
   return pcRef.current;
-  }, [roomId, socket]);
+  }, [roomId, socket, Other_UserData?.userId]);
 
 
   useEffect(() => {
@@ -103,12 +103,13 @@ export default function AudioCallUI() {
     if ( callId && seconds && isCall_Start ) {
       await handle_Call_Update(seconds.toString(), isCall_Start, callId);
     };
-    
+
     clearCallEndTimeout();
     setIsCall_Start(false);
     setCallId(null);
+    setIsCallActive(false);
     isOfferSetRef.current = false;
-    
+
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
       intervalRef.current = null;
@@ -116,11 +117,11 @@ export default function AudioCallUI() {
 
     localStreamRef.current?.getTracks().forEach(track => track.stop()); //Closing Mic
     pcRef.current?.close(); //Closing WebRTC connection
- 
+
     navigators(`/chat-room?roomId=${roomId}&otherUser-public_Id=${Other_UserData?.user_publicId}`);
 
-  }, 
-  [navigators, clearCallEndTimeout, seconds, isCall_Start, callId, setCallId, Other_UserData?.user_publicId]);
+  },
+  [navigators, clearCallEndTimeout, seconds, isCall_Start, callId, setCallId, setIsCallActive, Other_UserData?.user_publicId]);
 
 
   const handle_Accpeted_AudioCall = useCallback(async (roomId: string, reciverId: string) => {

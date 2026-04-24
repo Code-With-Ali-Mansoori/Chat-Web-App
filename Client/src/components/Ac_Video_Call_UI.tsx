@@ -16,7 +16,7 @@ export default function VideoCallUI() {
   const [seconds, setSeconds] = useState(0);
   const [isOtherMuted, setIsOtherMuted] = useState<boolean>(false);
 
-  const { callId, setCallId } = useSearch();
+  const { callId, setCallId, setIsCallActive } = useSearch();
   const socket = useSocket();
   useUnloadWarning();
 
@@ -206,6 +206,7 @@ export default function VideoCallUI() {
 
     clearCallEndTimeout();
     setIsCall_Start(false);
+    setIsCallActive(false);
     setCallId(null);
     isOfferSetRef.current = false;
     isRemoteDescriptionSetRef.current = false;
@@ -223,7 +224,7 @@ export default function VideoCallUI() {
 
 
     navigators(`/chat-room?roomId=${roomId}&otherUser-public_Id=${Other_UserData?.user_publicId}`);
-  }, [navigators, Other_UserData?.user_publicId, clearCallEndTimeout, seconds, isCall_Start, callId, setCallId]);
+  }, [navigators, Other_UserData?.user_publicId, clearCallEndTimeout, seconds, isCall_Start, callId, setCallId, setIsCallActive]);
 
 
   const handle_Offer_VideoCall = useCallback(async (offer: RTCSessionDescriptionInit, roomId: string) => {
@@ -265,6 +266,24 @@ export default function VideoCallUI() {
     }
 
     try {
+      // If connection is already stable, ICE completed the connection
+      // Process queued ICE candidates and emit connected event
+      if (pc.signalingState === 'stable') {
+        console.log('Connection already in stable state, processing ICE candidates');
+        while (iceCandidateQueueRef.current.length > 0) {
+          const candidate = iceCandidateQueueRef.current.shift();
+          if (candidate) {
+            try {
+              await pc.addIceCandidate(candidate);
+            } catch (error) {
+              console.warn("Error adding queued ICE candidate:", error);
+            }
+          }
+        }
+        socket.emit('video-call-Connected', roomId, reciverId);
+        return;
+      }
+
       if (pc.signalingState !== "have-local-offer") {
         console.warn("Signaling state is not 'have-local-offer'. Current state:", pc.signalingState);
         return;

@@ -1,1 +1,1 @@
-Ok, now i am using localhost [Forntend and Backend] for bug fix!
+These is the only one fix! when video call happeing! sometimes its videos share between teh users and sometimes not! means when they not, they only see thier video but not other! i just want gurantee for both the user can saw each others video!

@@ -5,35 +5,39 @@ import useOtherUser from "../Hooks/useOtherUser";
 import useProfile_Hooks from "../Hooks/Profile.Hook";
 import { useCallback, useEffect } from "react";
 import { useUnloadWarning } from "../Hooks/useUnloadWarning";
+import useSearch from "../Hooks/SearchContext.hook";
 
 export default function IncomingVideoCall() {
 
   useUnloadWarning();
   const socket = useSocket();
   const navigators =  useNavigate();
-  
+  const { setIsCallActive } = useSearch();
+
   const [searchParams] = useSearchParams();
   const roomId = searchParams.get("roomId");
   const user_Id = searchParams.get("Caller-User-Id");
-    
+
   const { data : Other_UserData } = useOtherUser(user_Id as string);
   const { data : myProfile } = useProfile_Hooks();
 
   const hanlde_Disconnect_Call = useCallback(() => {
-      
+
       alert('⚠️ Network has Interupted');
-    
+
       setTimeout(() => {
+          setIsCallActive(false);
           navigators(`/chat-room?roomId=${roomId}&otherUser-public_Id=${Other_UserData?.user_publicId}`);
           socket.emit('disconnect-the-call', roomId);
       }, 2000);
-      
-    }, [Other_UserData?.user_publicId, navigators, roomId, socket]);
+
+    }, [Other_UserData?.user_publicId, navigators, roomId, socket, setIsCallActive]);
 
   useEffect(() => {
         socket.emit('join-room', roomId);
-    
-        socket.on('end-video-called', () => {      
+
+        socket.on('end-video-called', () => {
+          setIsCallActive(false);
           navigators(-1); //chat-room?roomId=${roomId}&otherUser-public_Id=${Other_UserData.user_publicId}`
         });
 
@@ -41,20 +45,22 @@ export default function IncomingVideoCall() {
 
         socket.on('VideoCall-not-reached', () => {
            console.log('You have missed the call!');
+           setIsCallActive(false);
            navigators(-1); ///chat-room?roomId=${roomId}&otherUser-public_Id=${Other_UserData.user_publicId}
         });
-    
+
         return () => {
           socket.off('end-video-called');
           socket.off('disconnect-the-call', hanlde_Disconnect_Call);
           socket.off('VideoCall-not-reached');
         };
-    
-  }, [navigators, socket, roomId, Other_UserData?.user_publicId, hanlde_Disconnect_Call]);
+
+  }, [navigators, socket, roomId, Other_UserData?.user_publicId, hanlde_Disconnect_Call, setIsCallActive]);
 
   const handle_Reject_Call = (roomId : string ) => {
       socket.emit('reject-video-call', roomId , myProfile?.message.data.user_id );
-      // navigators(`/chat-room?roomId=${roomId}&otherUsPer-public_Id=${user_Id}`); //Other_Id 
+      setIsCallActive(false);
+      // navigators(`/chat-room?roomId=${roomId}&otherUsPer-public_Id=${user_Id}`); //Other_Id
       navigators(-1);
   };
 

@@ -73,7 +73,7 @@ const Chat_UI = () => {
   const navigator = useNavigate();
   const socket = useSocket();
   const { mutateAsync } = useCall_log();
-  const { setCallId } = useSearch();
+  const { setCallId, setIsCallActive } = useSearch();
 
   const [searchParams] = useSearchParams();
   const roomId = searchParams.get("roomId");
@@ -383,6 +383,7 @@ const Chat_UI = () => {
     setCallId(res?.data.call_id)
 
     socket.emit('audio-call-invite', roomId, caller.public_Id, res?.data.call_id, callee.userId);
+    setIsCallActive(true);
     setTimeout(() => navigator(`/active-audio-call?roomId=${roomId}&Called-User-Id=${callee?.user_publicId}`), 1000);
   };
 
@@ -399,13 +400,16 @@ const Chat_UI = () => {
     setCallId(res?.data.call_id);
 
     socket.emit('video-call-invite', roomId, caller.public_Id, res?.data.call_id, callee.userId);
+    setIsCallActive(true);
     setTimeout(() => navigator(`/active-video-call?roomId=${roomId}&Called-User-Id=${callee?.user_publicId}`), 1000);
   };
 
-  // (listener moved to useEffect to prevent duplicate registrations)
-  return (<div id={roomId as string} className="fixed inset-0 md:relative md:h-full w-full flex flex-col overflow-hidden bg-white z-50 md:z-0">
-    <div className="border-b border-gray-400 flex shrink-0 justify-between items-center gap-1 py-3 px-2 z-10 bg-white sticky top-0">
-      <div onClick={() => { handleLeaveChatRoom() }} className="w-fit hover:cursor-pointer p-1"><ChevronLeft strokeWidth={1.5} /></div>
+  // ... (rest of the code remains the same)
+
+  return (
+    <div id={roomId as string} className="fixed inset-0 md:relative md:h-full w-full flex flex-col overflow-hidden bg-white z-50 md:z-0">
+      <div className="border-b border-gray-400 flex shrink-0 justify-between items-center gap-1 py-3 px-2 z-10 bg-white sticky top-0">
+        <div onClick={() => { handleLeaveChatRoom() }} className="w-fit hover:cursor-pointer p-1"><ChevronLeft strokeWidth={1.5} /></div>
 
       <div onClick={() => { navigator(`/profile?username=${Other_UserData?.username}&userId=${Other_UserData?.user_publicId}`) }} className="flex items-center gap-2 flex-1">
         <div className="h-10 w-10">

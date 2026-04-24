@@ -13,22 +13,25 @@ export const ContextHanlder_Function = ({children} : app_props) => {
     const [isPop_Unable, setIsPop_Unable] = useState<boolean>(false);
     const [load, setLoad] = useState<boolean>(false);
     const [callId, setCallId] = useState<string | null>(null);
+    const [isCallActive, setIsCallActive] = useState<boolean>(false);
 
-    return ( 
-        <ContextData.Provider 
+    return (
+        <ContextData.Provider
         value={{
-            userSearched, 
-            setUserSearched, 
-            searchResult, 
-            setSearchResult, 
-            setSelectedUser, 
+            userSearched,
+            setUserSearched,
+            searchResult,
+            setSearchResult,
+            setSelectedUser,
             selectedUser,
             isPop_Unable,
             setIsPop_Unable,
             load,
             setLoad,
             callId,
-            setCallId
+            setCallId,
+            isCallActive,
+            setIsCallActive
             }}>
         {children}
         </ContextData.Provider>

@@ -5,23 +5,26 @@ import { useSocket } from "../Hooks/Sockets";
 import useProfile_Hooks from "../Hooks/Profile.Hook";
 import { useCallback, useEffect } from "react";
 import { useUnloadWarning } from "../Hooks/useUnloadWarning";
+import useSearch from "../Hooks/SearchContext.hook";
 
 export default function IncomingAudioCall() {
 
   const socket = useSocket();
   const navigators =  useNavigate();
+  const { setIsCallActive } = useSearch();
 
   const [searchParams] = useSearchParams();
   const roomId = searchParams.get("roomId");
   const user_Id = searchParams.get("Caller-User-Id");
-  
+
   const { data : Other_UserData } = useOtherUser(user_Id as string);
   const { data : myProfile } = useProfile_Hooks();
-  
+
   useUnloadWarning();
 
   const handle_Reject_Call = (roomId : string) => {
       socket.emit('reject-audio-call', roomId , myProfile?.message.data.user_id );
+      setIsCallActive(false);
       navigators(-1);
       // /chat-room?roomId=${roomId}&otherUser-public_Id=${user_Id}
   };
@@ -38,20 +41,22 @@ export default function IncomingAudioCall() {
       navigators(`/active-audio-call?roomId=${roomId}&Called-User-Id=${user_Id}`); //OtherUser
   };
 
-  const hanlde_Disconnect_Call = useCallback(() => {   
+  const hanlde_Disconnect_Call = useCallback(() => {
     alert('⚠️ Network has Interupted');
-      
+
     setTimeout(() => {
+      setIsCallActive(false);
       navigators(`/chat-room?roomId=${roomId}&otherUser-public_Id=${Other_UserData?.user_publicId}`);
       socket.emit('disconnect-the-call', roomId);
     }, 2000);
-        
-  }, [Other_UserData?.user_publicId, navigators, roomId, socket]);
+
+  }, [Other_UserData?.user_publicId, navigators, roomId, socket, setIsCallActive]);
 
   useEffect(() => {
       socket.emit('join-room', roomId);
-  
-      socket.on('end-audio-called', () => {      
+
+      socket.on('end-audio-called', () => {
+        setIsCallActive(false);
         navigators(-1);
         //`/chat-room?roomId=${roomId}&otherUser-public_Id=${Other_UserData?.user_publicId}`
       });
@@ -60,16 +65,17 @@ export default function IncomingAudioCall() {
 
       socket.on('AudioCall-not-reached', () => {
            console.log('You have missed the call!');
+           setIsCallActive(false);
            navigators(-1); //chat-room?roomId=${roomId}&otherUser-public_Id=${Other_UserData.user_publicId}`
       });
-  
+
       return () => {
         socket.off('end-audio-called');
         socket.off('disconnect-the-call', hanlde_Disconnect_Call);
         socket.off('AudioCall-not-reached');
       };
-  
-    }, [navigators, socket, roomId, Other_UserData?.user_publicId, hanlde_Disconnect_Call]);
+
+    }, [navigators, socket, roomId, Other_UserData?.user_publicId, hanlde_Disconnect_Call, setIsCallActive]);
 
   return (
     <div className="h-dvh w-full bg-[#242323] flex flex-col justify-between text-white overflow-hidden">

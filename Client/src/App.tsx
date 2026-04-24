@@ -16,6 +16,7 @@ import IncomingVideoCall from './components/Inc_Video_UI';
 import AudioCallUI from './components/Ac_Audio_Call_UI';
 import VideoCallUI from './components/Ac_Video_Call_UI';
 import Call_history_pg from './components/Call_history_pg';
+import CallProtectedRoute from './components/CallProtectedRoute';
 
 const App = () => {
   return (
@@ -32,11 +33,12 @@ const App = () => {
             <Route path='/chat-room' element={<Chat_page/>} />
             <Route path='/chat-room?roomId=:roomId&otherUser-public_Id=:public_Id' element={<Chat_page/>} />
             
-            <Route path='/incoming-audio-call' element={<IncomingAudioCall/>} />
-            <Route path='/incoming-video-call' element={<IncomingVideoCall/>} />
-
-            <Route path='/active-audio-call' element={<AudioCallUI/>} />          
-            <Route path='/active-video-call' element={<VideoCallUI/>} />
+            <Route element={<CallProtectedRoute/>}>
+              <Route path='/incoming-audio-call' element={<IncomingAudioCall/>} />
+              <Route path='/incoming-video-call' element={<IncomingVideoCall/>} />
+              <Route path='/active-audio-call' element={<AudioCallUI/>} />
+              <Route path='/active-video-call' element={<VideoCallUI/>} />
+            </Route>
 
             <Route path='/' element={<App_structure/>} >
               <Route index element={<Welcome_msg/>} />
